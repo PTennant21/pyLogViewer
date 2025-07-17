@@ -90,7 +90,7 @@ class LogWindow(QMainWindow): # The entire window.
             while z in range(len(self.searchlist)): # iterates thru searchlist coords
                 self.tableBox.item(self.searchlist[z][0], self.searchlist[z][1]).setSelected(True) # ...and highlights everything WITHOUT making an entire new list
                 #self.tableBox.setCurrentCell(self.searchlist[z][0], self.searchlist[z][1])
-                print(str(self.searchlist[z][0]) + ", " + str(self.searchlist[z][1]))
+                #print(str(self.searchlist[z][0]) + ", " + str(self.searchlist[z][1]))
                 z += 1
             
             self.toplabel_set("Viewing " + str(self.searchindex + 1) + " of " + str(len(self.searchlist)) + ' results for "' + search + '". Highlighting.', self.tableBox) # tells user its highlighted
@@ -254,7 +254,8 @@ class LogWindow(QMainWindow): # The entire window.
         self.tableBox.setRowCount(len(data))
         self.tableBox.setColumnCount(11)
         self.tableBox.setHorizontalHeaderLabels(["IP Address", "Day", "Date1", "Date2", "Computer", "User", "Process", "New", "Old", "Min", "Max"])
-    
+        self.tableBox.setUpdatesEnabled(False)
+
         self.toplabel_set("Adding data from " + self.filepath + "...", -1)
 
         for y in range(len(data)):
@@ -290,6 +291,7 @@ class LogWindow(QMainWindow): # The entire window.
         #print("")
     
         self.tableBox.resizeColumnsToContents()
+        self.tableBox.setUpdatesEnabled(True)
         QApplication.restoreOverrideCursor()
 # end of LogWindow class.
 
