@@ -19,7 +19,7 @@ class LogWindow(QMainWindow): # The entire window.
         
         self.label = QLabel("Initializing...") # shows text.
         
-        self.tableBox = QTableWidget() # table which will show all data
+        self.tableBox = QTableWidget() # table which shows all data
         self.tableBox.setEditTriggers(QTableWidget.NoEditTriggers) # prevents editing of table items
         self.setDataTable(self.fileRead(self.filepath, True)) # most important line. sorts the data and passes it to setdatatable and sorts it further and puts it in the table.
         self.tableBox.horizontalHeader().sectionClicked.connect(self.tablesort) # allows for sorting via header click
