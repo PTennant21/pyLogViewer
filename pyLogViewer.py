@@ -7,15 +7,16 @@ class LogWindow(QMainWindow): # The entire window.
     def __init__(self): # initializes all of the values
         super().__init__() # this initializes it with the mainwindow
 
+        self.version = "v0.5.1" # program version.
         self.filepath = "data.txt" # file location, also used to display
-        self.setWindowTitle("pyLogViewer v0.5.0 - " + self.filepath) # window name
+        self.setWindowTitle("pyLogViewer " + self.version + " - " + self.filepath) # window name
         self.sortDown = True # always sort columns descending by default
         self.lastIndex = 0 # last selected column, 0 is default
         self.searchlist = -1 # contains coordinates of current search matches
         self.lastsearch = -1 # the last search, as a string. used for comparison to current search
         self.searchindex = -1 # which position in the searchlist the user is at
         self.lastlight = False # allows you to click highlight again to view your current place
-
+        
         self.label = QLabel("Initializing...") # shows text.
         
         self.tableBox = QTableWidget() # table which will show all data
@@ -148,7 +149,7 @@ class LogWindow(QMainWindow): # The entire window.
         prompt.setViewMode(QFileDialog.ViewMode.Detail) # shows greater detail in explorer
         self.filepath = prompt.getOpenFileName(self, "Select a file.", None, "Text Files (*.txt);;All Files (*)",)[0] # opens window itself and returns filepath. includes text and supported filetypes.
         if(self.filepath != ""): # make sure it is actually something
-            self.setWindowTitle("pyLogViewer v0.5.0 - " + self.filepath) # visual filepath indicator
+            self.setWindowTitle("pyLogViewer " + self.version + " - " + self.filepath) # visual filepath indicator
             self.reinit() # reload the file and reinitialize nearly everything
 
     def eventFilter(self, obj, event): # checks if key enter has been pressed when inputbox is in focus. these vars are in the class already
@@ -171,7 +172,7 @@ class LogWindow(QMainWindow): # The entire window.
             return # LEAVE!
 
         self.toplabel_set("Click a header to sort.", self.tableBox) # its a label alright
-        self.setWindowTitle("pyLogViewer v0.5.0 - " + self.filepath ) # window name
+        self.setWindowTitle("pyLogViewer " + self.version + " - " + self.filepath) # window name
 
     def tablesort(self, logicalIndex): # sorts the selected column when... a column header is selected.
         self.toplabel_set("Sorting...", self.tableBox) # loading message you know the drill by now
