@@ -1,14 +1,15 @@
 import sys # imports system module
 from PyQt5 import QtCore # imports qtcore module
-from PyQt5.QtCore import QSize, Qt # imports qsize and qt classes
+from PyQt5.QtCore import QSize, Qt, QStringListModel, QModelIndex, QVariant # imports qsize and qt classes
+#from PyQt5.QtCore import QVector
 from PyQt5.QtWidgets import QApplication, QCheckBox, QFileDialog, QMainWindow, QPushButton, QLabel, QTableWidget, QTableWidgetItem, QLineEdit, QVBoxLayout, QHBoxLayout, QWidget # imports.. a lot of widget classes
 
 class LogWindow(QMainWindow): # The entire window.
     def __init__(self): # initializes all of the values
         super().__init__() # this initializes it with the mainwindow
-
-        self.version = "v0.5.2" # program version.
-        self.filepath = "dataGiant.txt" # file location, also used to display
+        #self.stinky = QVector()
+        self.version = "v0.6.0" # program version.
+        self.filepath = "data.txt" # file location, also used to display
         self.setWindowTitle("pyLogViewer " + self.version + " - " + self.filepath) # window name
         self.sortDown = True # always sort columns descending by default
         self.lastIndex = 0 # last selected column, 0 is default
@@ -16,12 +17,13 @@ class LogWindow(QMainWindow): # The entire window.
         self.lastsearch = -1 # the last search, as a string. used for comparison to current search
         self.searchindex = -1 # which position in the searchlist the user is at
         self.lastlight = False # allows you to click highlight again to view your current place
-        
+        self.maxline = 5000000 # maximum amount of lines to read.
+
         self.label = QLabel("Initializing...") # shows text.
         
         self.tableBox = QTableWidget() # table which shows all data
         self.tableBox.setEditTriggers(QTableWidget.NoEditTriggers) # prevents editing of table items
-        self.setDataTable(self.fileRead(self.filepath, True)) # most important line. sorts the data and passes it to setdatatable and sorts it further and puts it in the table.
+        self.fileRead() # most important line. sorts the data and passes it to setdatatable and sorts it further and puts it in the table.
         self.tableBox.horizontalHeader().sectionClicked.connect(self.tablesort) # allows for sorting via header click
 
         self.inputBox = QLineEdit() # edit line. lets you edit text in the line.
@@ -147,7 +149,7 @@ class LogWindow(QMainWindow): # The entire window.
         prompt = QFileDialog(self) # init var with class
         prompt.setFileMode(QFileDialog.FileMode.ExistingFile) # open existing file
         prompt.setViewMode(QFileDialog.ViewMode.Detail) # shows greater detail in explorer
-        self.filepath = prompt.getOpenFileName(self, "Select a file.", None, "Text Files (*.txt);;All Files (*)",)[0] # opens window itself and returns filepath. includes text and supported filetypes.
+        self.filepath = prompt.getOpenFileName(self, "Select a file.", None, "Log Files (*.log);;Text Files (*.txt);;All Files (*)",)[0] # opens window itself and returns filepath. includes text and supported filetypes.
         if(self.filepath != ""): # make sure it is actually something
             self.setWindowTitle("pyLogViewer " + self.version + " - " + self.filepath) # visual filepath indicator
             self.reinit() # reload the file and reinitialize nearly everything
@@ -163,9 +165,11 @@ class LogWindow(QMainWindow): # The entire window.
         self.lastIndex = 0 # last selected column, 0 is default
         self.clearsearch() # clears the search variables
         try: # if the code fails, the exception is handled.
-            self.setDataTable(self.fileRead(self.filepath, False)) # adds cleaned up data array to the data table
+            self.fileRead() # adds cleaned up data array to the data table
         except:
             self.tableBox.clear() # empty the box
+            #del self.model
+            #self.model = QStringListModel()
             self.filepath = -1 # set no filepath
             self.toplabel_set("Error with selected file.", -1) # this one is self explanatory i think.
             QApplication.restoreOverrideCursor() # restores the cursor cuz setdatatable is usually cut off before it does
@@ -194,105 +198,94 @@ class LogWindow(QMainWindow): # The entire window.
         if(table == -1): # -1 replaces the table in some instances to avoid displaying row count
             self.label.setText("Rows: N/A\n" + action) # yeah.
         else: # otherwise
-            self.label.setText("Rows: " + str(table.rowCount()) + "\n" + action) # it's just the row count !
+            self.label.setText("Rows: " + str(self.tableBox.rowCount()) + "\n" + action) # it's just the row count !
         app.processEvents() # this just makes the application display actively update so the user knows it isn't dead
 
-    def fixup_date(self, date, type): # formats the dates in either date1 or date2 to be uniform and sortable!
+    def fixup_date(self, date, type): # formats the dates in either date1 or date2 to be uniform and sortable! ADD THIS TO MAIN LOOP.
         month = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] # those are all of the months, if you didn't know
         
         for i in range(len(month)): # goes through said all of the months
             date = date.replace(month[i], str(i + 1).zfill(2)) # replaces months with numbers when it finds them. this actually isn't too efficient.. RESEARCH other ways
         if(type == 1): # date1 is already formatted well
-            return(date[2:]) # returns the string from uh. some index. RESEARCH
+            return(date[2:]) # returns the string from third digit of year.
         if(type == 2): # date2 is messed up and must be rearranged.
             date = date.split(" ") # splits at space
             date[0] = date[0].split("-") # splits the data at dashes
             return(date[0][2] + "-" + date[0][1] + "-" + date[0][0] + " " + date[1]) # rearranges the date and time to be sortable and in line with date1
 
-    def fileRead(self, path, init): # this goes through the txt file, removes all blank lines and returns it as a 2D list.
-        self.toplabel_set("Parsing file " + self.filepath + "...", -1)
+    def fileRead(self): # this goes through the txt file, removes all blank lines and returns it as a 2D list.
+
+        self.toplabel_set("Parsing file...", -1)
         QApplication.setOverrideCursor(Qt.WaitCursor)
 
-        if(init):
-            with(open(path, 'r')) as logfile:
-                data = logfile.read().replace("\n\n", "\n").split("\n") # removes all of the blanks between lines.
-        else:
-            try: # checks if file even exists otherwise it exits and nothing ever happens
-                with(open(self.filepath, 'r')) as logfile:
-                    data = logfile.read().replace("\n\n", "\n").split("\n") # removes excess newlines
+        #try: # checks if file even exists otherwise it exits and nothing ever happens
+        with(open(self.filepath, 'r')) as logfile:
+                data = logfile.read()
 
-                #self.filepath = self.inputBox.text()
-            except:
-                print("FILE NOT FOUND.")
-                self.inputBox.clear()
-                self.toplabel_set("Filepath not found.", -1)
-                #self.layout.update()
-                QApplication.restoreOverrideCursor()
-                return -1
+                data = data.split("\n") # removes blanks between lines and splits each value into one list.
 
-        self.toplabel_set("Formatting data from " + self.filepath + "...", -1)
-
-        v = 0
-        while v < len(data): # removes blanklines and splits full lines into space-based lists
-            if(data[v].isspace() or (len(data[v]) <= 1)):
-                data.pop(v)
-                v -= 1
-            else:
-                data[v] = data[v].split(" ") 
-                #print(data[v])
-            v += 1
-
-        QApplication.restoreOverrideCursor()
-        return data
-    
-    def setDataTable(self, data): # sets the tablewidget with data from a 2d list
-        if(data == -1):
-            return
+                #if(len(data) > self.maxline): # cuts list off at specified line
+                #    data = data[:self.maxline]
+        '''except:
+            print("FILE NOT FOUND.")
+            self.inputBox.clear()
+            self.toplabel_set("Filepath not found.", -1)
+            #self.layout.update()
+            QApplication.restoreOverrideCursor()
+            return -1'''
+        #print(data) # debug print.
         
-        QApplication.setOverrideCursor(Qt.WaitCursor)
         self.tableBox.clear()
-        self.tableBox.setRowCount(len(data))
         self.tableBox.setColumnCount(11)
+        self.tableBox.setRowCount(len(data))
         self.tableBox.setHorizontalHeaderLabels(["IP Address", "Day", "Date1", "Date2", "Computer", "User", "Process", "New", "Old", "Min", "Max"])
         self.tableBox.setUpdatesEnabled(False)
+        a = 0
+        b = 0
+        self.toplabel_set("Adding data to table...", -1)
 
-        self.toplabel_set("Adding data from " + self.filepath + "...", -1)
+        while a < len(data): # splits each line of the data.
+            data[a] = data[a].split()
 
-        for y in range(len(data)):
-            offset = 0
-            #print("\nL" + str(y+1), end = ': ')
-            for x in range(15):
-                #print(x, end = ':')
-                if(x in range(len(data[y]))):
-                    if(x == 2):
-                        item = QTableWidgetItem(self.fixup_date(data[y][5] + "-" + data[y][2] + "-" + data[y][3] + " " + data[y][4], 1))
-                        #print("A", end = '.')
-                        x = 5
-                        offset = -3
-                    elif(x == 6):
-                        item = QTableWidgetItem(self.fixup_date(data[y][6] + " " + data[y][7], 2))
-                        #print("B", end = '.')
-                        x = 7
-                        offset = -4
-                    elif(x < 2 or x > 7):
-                        item = QTableWidgetItem(data[y][x]) # sets each widget item in the tables slots.
-                    else:
-                        item = -1
-                else:
-                    item = QTableWidgetItem("N/A") # default message if current row has less columns
-                    #print("e", end = '.')
+            if(len(data[a]) == 0): # if current item is an empty list, pops item and continues loop.
+                #print("oof" + str(data[a])) # debug print.
+                data.pop(a)
+                continue
 
-                if(item != -1):
-                    self.tableBox.setItem(y, x + offset, item)
-                    #print("add", end = ' ')
-                #else:
-                    #print("_", end = '')
-                
-        #print("")
-    
+            while b < len(data[a]):
+
+                if(b == 2): # turns this index into date 1, then removes redundant data
+                    data[a][2] = self.fixup_date(data[a][5] + "-" + data[a][2] + "-" + data[a][3] + " " + data[a][4], 1)
+                    for i in range(3):
+                        data[a].pop(3)
+
+                if(b == 3): # turns this index into date 2, removes redundant data
+                    data[a][3] =  self.fixup_date(data[a][3] + " " + data[a][4], 2)
+                    data[a].pop(4)
+
+                #print("[" + str(data[a][b]), end = "] ") # debug print.
+                self.tableBox.setItem(a, b, QTableWidgetItem(data[a][b])) # creates and sets tablewidgetitem in table for each string
+
+                b += 1
+
+            if(len(data[a]) == 9): # checks for and adds blank items to list
+                self.tableBox.setItem(a, 9, QTableWidgetItem("N/A"))
+                self.tableBox.setItem(a, 10, QTableWidgetItem("N/A"))
+
+            a += 1
+            b = 0
+            if(a >= self.maxline):
+                break
+            #print() # debug print.
+
+        #print(data) # debug print.
+
+        self.tableBox.setRowCount(len(data) if len(data) < self.maxline else self.maxline)
         self.tableBox.resizeColumnsToContents()
         self.tableBox.setUpdatesEnabled(True)
+        del data
         QApplication.restoreOverrideCursor()
+        #return("Fileread done.") # debug print.
 # end of LogWindow class.
 
 app = QApplication(sys.argv)
