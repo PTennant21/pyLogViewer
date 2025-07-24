@@ -1,14 +1,13 @@
 import sys # imports system module
 from PyQt5 import QtCore # imports qtcore module
-from PyQt5.QtCore import QSize, Qt, QStringListModel, QModelIndex, QVariant # imports qsize and qt classes
+from PyQt5.QtCore import QSize, Qt # imports qsize and qt classes
 #from PyQt5.QtCore import QVector
 from PyQt5.QtWidgets import QApplication, QCheckBox, QFileDialog, QMainWindow, QPushButton, QLabel, QTableWidget, QTableWidgetItem, QLineEdit, QVBoxLayout, QHBoxLayout, QWidget # imports.. a lot of widget classes
 
 class LogWindow(QMainWindow): # The entire window.
     def __init__(self): # initializes all of the values
         super().__init__() # this initializes it with the mainwindow
-        #self.stinky = QVector()
-        self.version = "v0.6.0" # program version.
+        self.version = "v0.5.3" # program version.
         self.filepath = "data.txt" # file location, also used to display
         self.setWindowTitle("pyLogViewer " + self.version + " - " + self.filepath) # window name
         self.sortDown = True # always sort columns descending by default
@@ -17,7 +16,7 @@ class LogWindow(QMainWindow): # The entire window.
         self.lastsearch = -1 # the last search, as a string. used for comparison to current search
         self.searchindex = -1 # which position in the searchlist the user is at
         self.lastlight = False # allows you to click highlight again to view your current place
-        self.maxline = 5000000 # maximum amount of lines to read.
+        self.maxline = 400000 # maximum amount of lines to read.
 
         self.label = QLabel("Initializing...") # shows text.
         
@@ -87,12 +86,10 @@ class LogWindow(QMainWindow): # The entire window.
             return # exit the method.
         elif(self.lastsearch == search and dir == 0): # else if the search is the same as last time AND the last move wasn't a highlight (lastmove should always not be highlight)
             QApplication.setOverrideCursor(Qt.WaitCursor) # loading cursor because this can take a while
-            #self.searchindex = 0
             z = 0
             while z in range(len(self.searchlist)): # iterates thru searchlist coords
                 self.tableBox.item(self.searchlist[z][0], self.searchlist[z][1]).setSelected(True) # ...and highlights everything WITHOUT making an entire new list
                 #self.tableBox.setCurrentCell(self.searchlist[z][0], self.searchlist[z][1])
-                #print(str(self.searchlist[z][0]) + ", " + str(self.searchlist[z][1]))
                 z += 1
             
             self.toplabel_set("Viewing " + str(self.searchindex + 1) + " of " + str(len(self.searchlist)) + ' results for "' + search + '". Highlighting.', self.tableBox) # tells user its highlighted
@@ -123,7 +120,6 @@ class LogWindow(QMainWindow): # The entire window.
                             self.tableBox.setCurrentCell(self.searchlist[0][0], self.searchlist[0][1]) # highlight and go to it
                             highlightfirst = False
                         self.tableBox.item(row, column).setSelected(True)
-                    #print("found at " + str(row) + ", " + str(column))
                     #self.toplabel_set("Found " + str(len(self.searchlist)) + " items...", self.tableBox)
                 column += 1
             row += 1
@@ -158,18 +154,16 @@ class LogWindow(QMainWindow): # The entire window.
         if event.type() == QtCore.QEvent.KeyPress and obj is self.inputBox: # if there is a key press event...
             if event.key() == QtCore.Qt.Key_Return and self.inputBox.hasFocus(): # and the pressed key is return... and the input box is in focus...
                 self.searchtable(1) # then SEARCH the table! pressing enter with the box goes forwards.
-        return super().eventFilter(obj, event) # RESEARCH THIS
+        return super().eventFilter(obj, event)
 
     def reinit(self): # REINITIALIZATION!!! Brings everything to zero and reads a new file.
         self.sortDown = True # always sort descending by default
         self.lastIndex = 0 # last selected column, 0 is default
         self.clearsearch() # clears the search variables
         try: # if the code fails, the exception is handled.
-            self.fileRead() # adds cleaned up data array to the data table
+            self.fileRead() # reads file and adds data to the data table
         except:
             self.tableBox.clear() # empty the box
-            #del self.model
-            #self.model = QStringListModel()
             self.filepath = -1 # set no filepath
             self.toplabel_set("Error with selected file.", -1) # this one is self explanatory i think.
             QApplication.restoreOverrideCursor() # restores the cursor cuz setdatatable is usually cut off before it does
@@ -218,22 +212,16 @@ class LogWindow(QMainWindow): # The entire window.
         self.toplabel_set("Parsing file...", -1)
         QApplication.setOverrideCursor(Qt.WaitCursor)
 
-        #try: # checks if file even exists otherwise it exits and nothing ever happens
-        with(open(self.filepath, 'r')) as logfile:
-                data = logfile.read()
-
-                data = data.split("\n") # removes blanks between lines and splits each value into one list.
-
-                #if(len(data) > self.maxline): # cuts list off at specified line
-                #    data = data[:self.maxline]
-        '''except:
+        try: # checks if file even exists otherwise it exits and nothing ever happens
+            with(open(self.filepath, 'r')) as logfile:
+                    data = logfile.read()
+                    data = data.split("\n") # removes blanks between lines and splits each value into one list.
+        except:
             print("FILE NOT FOUND.")
             self.inputBox.clear()
             self.toplabel_set("Filepath not found.", -1)
-            #self.layout.update()
             QApplication.restoreOverrideCursor()
-            return -1'''
-        #print(data) # debug print.
+            return -1
         
         self.tableBox.clear()
         self.tableBox.setColumnCount(11)
@@ -248,7 +236,6 @@ class LogWindow(QMainWindow): # The entire window.
             data[a] = data[a].split()
 
             if(len(data[a]) == 0): # if current item is an empty list, pops item and continues loop.
-                #print("oof" + str(data[a])) # debug print.
                 data.pop(a)
                 continue
 
@@ -263,7 +250,6 @@ class LogWindow(QMainWindow): # The entire window.
                     data[a][3] =  self.fixup_date(data[a][3] + " " + data[a][4], 2)
                     data[a].pop(4)
 
-                #print("[" + str(data[a][b]), end = "] ") # debug print.
                 self.tableBox.setItem(a, b, QTableWidgetItem(data[a][b])) # creates and sets tablewidgetitem in table for each string
 
                 b += 1
@@ -276,16 +262,13 @@ class LogWindow(QMainWindow): # The entire window.
             b = 0
             if(a >= self.maxline):
                 break
-            #print() # debug print.
-
-        #print(data) # debug print.
 
         self.tableBox.setRowCount(len(data) if len(data) < self.maxline else self.maxline)
         self.tableBox.resizeColumnsToContents()
         self.tableBox.setUpdatesEnabled(True)
         del data
         QApplication.restoreOverrideCursor()
-        #return("Fileread done.") # debug print.
+        return("hi dfnuf")
 # end of LogWindow class.
 
 app = QApplication(sys.argv)
