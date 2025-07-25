@@ -1,12 +1,12 @@
-import sys # imports system module
+import sys, time # imports system and time modules
 from PyQt5 import QtCore # imports qtcore module
 from PyQt5.QtCore import QSize, Qt # imports qsize and qt classes
-from PyQt5.QtWidgets import QApplication, QCheckBox, QFileDialog, QMainWindow, QPushButton, QLabel, QTableWidget, QTableWidgetItem, QLineEdit, QVBoxLayout, QHBoxLayout, QWidget # imports.. a lot of widget classes
+from PyQt5.QtWidgets import QApplication, QSpinBox, QCheckBox, QFileDialog, QMainWindow, QPushButton, QLabel, QTableWidget, QTableWidgetItem, QLineEdit, QVBoxLayout, QHBoxLayout, QWidget # imports.. a lot of widget classes
 
 class LogWindow(QMainWindow): # The window class
     def __init__(self): # initializes class values
         super().__init__() # initializes it with mainwindow
-        self.version = "v0.5.5"
+        self.version = "v0.5.6"
         self.filepath = "data.txt"
         self.setWindowTitle("pyLogViewer " + self.version + " - " + self.filepath)
         self.sortDown = True # always sort columns descending by default
@@ -15,10 +15,19 @@ class LogWindow(QMainWindow): # The window class
         self.lastsearch = -1 # the last search, as a string. used for comparison to current search
         self.searchindex = -1 # which position in the searchlist the user is at
         self.lastlight = False # allows you to click highlight again to view your current place
-        self.maxline = 150000 # maximum amount of lines to read
 
         self.label = QLabel("Initializing...")
         
+        self.refreshLabel = QLabel("Seconds to refresh:")
+        self.refreshBox = QSpinBox() # editable line, contains search value
+
+        self.maxLabel = QLabel("Max lines:")
+        self.maxlineBox = QSpinBox() # editable line, contains search value
+        self.maxlineBox.setMaximum(1000000)
+        self.maxlineBox.setSingleStep(10000)
+        self.maxlineBox.setValue(150000) # maximum amount of lines to read
+        self.maxlineBox.setGroupSeparatorShown(True)
+
         self.tableBox = QTableWidget() # table, contains and shows data
         self.tableBox.setEditTriggers(QTableWidget.NoEditTriggers) # prevents editing of table items
         self.fileRead() # sorts the data and passes it to tablebox
@@ -41,7 +50,7 @@ class LogWindow(QMainWindow): # The window class
         self.buttonFile = QPushButton("Open File")
         self.buttonFile.clicked.connect(self.filePrompt) # opens a file prompt when the button is clicked
 
-        self.setMinimumSize(QSize(500, 300))
+        self.setMinimumSize(QSize(510, 200))
         self.resize(900, 500)
 
         self.bottombar = QHBoxLayout() # horizontal layout, allows multiple widgets going horizontally. used for the search box and buttons
@@ -52,10 +61,18 @@ class LogWindow(QMainWindow): # The window class
         self.bottombar.insertWidget(5, self.buttonHighlight)
         self.bottombar.insertWidget(6, self.caseCheck)
 
+        self.topbar = QHBoxLayout()
+        self.topbar.insertWidget(1, self.label)
+        self.topbar.addStretch(2)
+        self.topbar.insertWidget(3, self.maxLabel)
+        self.topbar.insertWidget(4, self.maxlineBox)
+        self.topbar.insertWidget(5, self.refreshLabel)
+        self.topbar.insertWidget(6, self.refreshBox)
+
         self.toplabel_set("Click a header to sort, or use the box to search.", self.tableBox)
 
         self.layout = QVBoxLayout() # object containing the vertical layout
-        self.layout.addWidget(self.label)
+        self.layout.addLayout(self.topbar)
         self.layout.addWidget(self.tableBox)
         self.layout.addLayout(self.bottombar) # the entire horizontal search layout. they can be nested... how useful!
 
@@ -68,6 +85,7 @@ class LogWindow(QMainWindow): # The window class
         self.searchlist = -1
         self.searchindex = -1
         self.lastsearch = -1
+        self.lastlight = False
 
     def searchtable(self, dir): # creates list of all occurrences of specified value and subsequently proceeds through it
         search = self.inputBox.text() # the current input from the input box widget
@@ -217,6 +235,7 @@ class LogWindow(QMainWindow): # The window class
         self.tableBox.setRowCount(len(data))
         self.tableBox.setHorizontalHeaderLabels(["IP Address", "Day", "Date1", "Date2", "Computer", "User", "Process", "New", "Old", "Min", "Max"])
         self.tableBox.setUpdatesEnabled(False)
+        maxline = self.maxlineBox.value()
         a = 0
         b = 0
         self.toplabel_set("Adding data to table...", -1)
@@ -249,10 +268,10 @@ class LogWindow(QMainWindow): # The window class
 
             a += 1
             b = 0
-            if(a >= self.maxline):
+            if(a >= maxline):
                 break
 
-        self.tableBox.setRowCount(len(data) if len(data) < self.maxline else self.maxline)
+        self.tableBox.setRowCount(len(data) if len(data) < maxline else maxline)
         self.tableBox.resizeColumnsToContents()
         self.tableBox.setUpdatesEnabled(True)
         del data
@@ -264,3 +283,5 @@ app = QApplication(sys.argv)
 window = LogWindow() # the entire class which was created above
 window.show()
 app.exec()
+
+# TODO: limit "highlight all" to only highlight the nearest thousand or so values.
