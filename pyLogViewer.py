@@ -46,10 +46,10 @@ class LogWindow(QMainWindow): # The window class
 
         self.bottombar = QHBoxLayout() # horizontal layout, allows multiple widgets going horizontally. used for the search box and buttons
         self.bottombar.insertWidget(1, self.buttonFile)
-        self.bottombar.insertWidget(2, self.inputBox) 
-        self.bottombar.insertWidget(3, self.buttonHighlight)
-        self.bottombar.insertWidget(4, self.buttonSprev)
-        self.bottombar.insertWidget(5, self.buttonSnext)
+        self.bottombar.insertWidget(2, self.inputBox)
+        self.bottombar.insertWidget(3, self.buttonSprev)
+        self.bottombar.insertWidget(4, self.buttonSnext)
+        self.bottombar.insertWidget(5, self.buttonHighlight)
         self.bottombar.insertWidget(6, self.caseCheck)
 
         self.toplabel_set("Click a header to sort, or use the box to search.", self.tableBox)
@@ -79,22 +79,21 @@ class LogWindow(QMainWindow): # The window class
         # executed on repeat searches. it moves you to the next value in the selected direction. Direction 0 is a highlight, and repeating a highlight selects only cur value.
         if(self.lastsearch == search and (dir != 0 or self.lastlight)): # executed if its a repeat of the same search, AND either: the current move isn't a highlight OR the last move was a highlight 
             self.searchindex += (dir) # moves selection in direction. rhymes
-            if(self.searchindex >= len(self.searchlist)):
-                self.searchindex = 0
-            if(self.searchindex < 0):
-                self.searchindex = len(self.searchlist) - 1
+
+            if(self.searchindex not in range(len(self.searchlist))):
+                self.searchindex = 0 if dir != -1 else len(self.searchlist) - 1
+
             self.toplabel_set("Viewing " + str(self.searchindex + 1) + " of " + str(len(self.searchlist)) + ' results for "' + search + '".', self.tableBox) # result you're viewing out of total
-            self.tableBox.setCurrentCell(self.searchlist[self.searchindex][0], self.searchlist[self.searchindex][1]) # highlight and go to new selection
+            self.tableBox.setCurrentItem(self.searchlist[self.searchindex]) # highlight and go to new selection
             self.lastlight = False # the last search was NOT a highlight, because this code only selects one.
             return # exit the method.
-        elif(self.lastsearch == search and dir == 0): # else if the search is the same as last time AND the last move wasn't a highlight (lastmove should always not be highlight)
+        elif(self.lastsearch == search and dir == 0): # else if the search is the same as last time AND the last move wasn't a highlight (the lastmove should always not be highlight here)
             QApplication.setOverrideCursor(Qt.WaitCursor)
-            z = 0
-            while z in range(len(self.searchlist)): # iterates thru searchlist coords
-                self.tableBox.item(self.searchlist[z][0], self.searchlist[z][1]).setSelected(True) # ...and highlights everything WITHOUT making an entire new list
-                #self.tableBox.setCurrentCell(self.searchlist[z][0], self.searchlist[z][1]) # this sets current position every single highlight. inefficient.
-                z += 1
-            
+
+            for i in range(len(self.searchlist)): # iterates thru searchlist coords
+                self.searchlist[i].setSelected(True) # ...and highlights everything WITHOUT making an entire new list
+                #self.tableBox.setCurrentItem(self.searchlist[i]) # this sets current position every single highlight. inefficient.
+
             self.toplabel_set("Viewing " + str(self.searchindex + 1) + " of " + str(len(self.searchlist)) + ' results for "' + search + '". Highlighting.', self.tableBox) # tells user its highlighted
             self.lastlight = True # the last move WAS a highlight
             QApplication.restoreOverrideCursor()
@@ -103,38 +102,32 @@ class LogWindow(QMainWindow): # The window class
         # executed on new searches, sets the result list and initial position.
         self.toplabel_set("Searching...", self.tableBox)
         QApplication.setOverrideCursor(Qt.WaitCursor)
-        self.searchlist = []
+        
+        if(not self.caseCheck.isChecked()): # flags to determine case sensitivity
+            flags = Qt.MatchFlag.MatchContains
+        else:
+            flags = Qt.MatchFlag.MatchContains | Qt.MatchFlag.MatchCaseSensitive
 
-        row = 0 # loop var for table row
         self.tableBox.clearSelection() # removes selections in table widget
-        while row in range(self.tableBox.rowCount()): # goes through every row of the table.
-            column = 0 # loop var for table column
-            while column in range(self.tableBox.columnCount()): # goes through every column of the table.
-                if((self.tableBox.item(row, column).text().find(search) != -1) or (self.tableBox.item(row, column).text().lower().find(search.lower()) != -1 and  not self.caseCheck.isChecked())): # if the string was found
-                    self.searchlist.append([row, column])
-                    if(dir == 0): # highlight mode will highlight all results.
-                        if(len(self.searchlist) == 1):
-                            print("AFSDFREG")
-                            self.tableBox.setCurrentCell(self.searchlist[0][0], self.searchlist[0][1]) # go to the first result
-                        self.tableBox.item(row, column).setSelected(True)
-                    #self.toplabel_set("Found " + str(len(self.searchlist)) + " items...", self.tableBox)
-                column += 1
-            row += 1
+        self.searchlist = self.tableBox.findItems(search, flags) # puts all items from table into list
 
         if(len(self.searchlist) > 0): # goes to the first or last value if the searchlist has results.
-            self.searchlist = tuple(map(tuple, self.searchlist))
-            _num = -1 if dir == -1 else 0 # backwards search starts at bottom
-            self.searchindex = 0
-            if(dir == 0): # if triggered by enter, only display the total number
+            self.searchindex = 0 if dir != -1 else len(self.searchlist) - 1
+            self.tableBox.setCurrentItem(self.searchlist[0 if dir == 1 else dir]) # go to the first result
+
+            if(dir == 0):
                 self.lastlight = True
+                for i in range(len(self.searchlist)):
+                    self.searchlist[i].setSelected(True)
                 self.toplabel_set("Viewing all " + str(len(self.searchlist)) + ' results for "' + search + '".', self.tableBox)
-            else: # otherwise display the current item.
+            else:
                 self.lastlight = False
-                self.tableBox.setCurrentCell(self.searchlist[_num][0], self.searchlist[_num][1]) # go to the first result
                 self.toplabel_set("Viewing " + str(self.searchindex + 1) + " of " + str(len(self.searchlist)) + ' results for "' + search + '".', self.tableBox)
+            
             self.lastsearch = search 
         else:
             self.toplabel_set('No results for "' + search + '".', self.tableBox)
+
         QApplication.restoreOverrideCursor()
                 
     def filePrompt(self): # prompts user for a file using QFileDialog class
