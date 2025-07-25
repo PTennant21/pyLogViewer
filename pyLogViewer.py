@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import QApplication, QCheckBox, QFileDialog, QMainWindow, Q
 class LogWindow(QMainWindow): # The window class
     def __init__(self): # initializes class values
         super().__init__() # initializes it with mainwindow
-        self.version = "v0.5.4"
+        self.version = "v0.5.5"
         self.filepath = "data.txt"
         self.setWindowTitle("pyLogViewer " + self.version + " - " + self.filepath)
         self.sortDown = True # always sort columns descending by default
