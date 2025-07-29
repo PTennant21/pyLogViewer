@@ -1,12 +1,14 @@
 import sys, time # imports system and time modules
 from PyQt5 import QtCore # imports qtcore module
 from PyQt5.QtCore import QSize, Qt # imports qsize and qt classes
-from PyQt5.QtWidgets import QApplication, QSpinBox, QCheckBox, QFileDialog, QMainWindow, QPushButton, QLabel, QTableWidget, QTableWidgetItem, QLineEdit, QVBoxLayout, QHBoxLayout, QWidget # imports.. a lot of widget classes
+from PyQt5.QtWidgets import (QApplication, QSpinBox, QCheckBox, QFileDialog, QMainWindow, QPushButton,
+                             QLabel, QTableWidget, QTableWidgetItem, QLineEdit, QVBoxLayout, QHBoxLayout,
+                             QWidget) # imports.. a lot of widget classes
 
 class LogWindow(QMainWindow): # The window class
     def __init__(self): # initializes class values
         super().__init__() # initializes it with mainwindow
-        self.version = "v0.5.6"
+        self.version = "v0.5.7"
         self.filepath = "data.txt"
         self.setWindowTitle("pyLogViewer " + self.version + " - " + self.filepath)
         self.sortDown = True # always sort columns descending by default
@@ -14,7 +16,6 @@ class LogWindow(QMainWindow): # The window class
         self.searchlist = -1 # contains coordinates of current search matches
         self.lastsearch = -1 # the last search, as a string. used for comparison to current search
         self.searchindex = -1 # which position in the searchlist the user is at
-        self.lastlight = False # allows you to click highlight again to view your current place
         self.maxsearch = 1000
 
         self.label = QLabel("Initializing...")
@@ -40,9 +41,6 @@ class LogWindow(QMainWindow): # The window class
         self.caseCheck = QCheckBox("Case sensitive?")
         self.caseCheck.stateChanged.connect(self.clearsearch) # clears search so the next one re-evaluates the list with new conditions
 
-        self.buttonHighlight = QPushButton("Highlight All") # searches results and highlights all (slow)
-        self.buttonHighlight.clicked.connect(lambda : self.searchtable(0)) # passes direction to searchtable method. zero is highlight mode
-
         self.buttonSprev = QPushButton("Find Prev") # prev result of search
         self.buttonSprev.clicked.connect(lambda : self.searchtable(-1)) # can't connect a method with an argument so lambda is needed
         self.buttonSnext = QPushButton("Find Next") # next result of search
@@ -59,8 +57,7 @@ class LogWindow(QMainWindow): # The window class
         self.bottombar.insertWidget(2, self.inputBox)
         self.bottombar.insertWidget(3, self.buttonSprev)
         self.bottombar.insertWidget(4, self.buttonSnext)
-        self.bottombar.insertWidget(5, self.buttonHighlight)
-        self.bottombar.insertWidget(6, self.caseCheck)
+        self.bottombar.insertWidget(5, self.caseCheck)
 
         self.topbar = QHBoxLayout()
         self.topbar.insertWidget(1, self.label)
@@ -86,7 +83,6 @@ class LogWindow(QMainWindow): # The window class
         self.searchlist = -1
         self.searchindex = -1
         self.lastsearch = -1
-        self.lastlight = False
 
     def searchtable(self, dir): # creates list of all occurrences of specified value and subsequently proceeds through it
         search = self.inputBox.text() # the current input from the input box widget
@@ -95,8 +91,8 @@ class LogWindow(QMainWindow): # The window class
             self.toplabel_set("No search value entered.", self.tableBox) # does this if you try to search nothing for some reason
             return # exit the method.
 
-        # executed on repeat searches. it moves you to the next value in the selected direction. Direction 0 is a highlight, and repeating a highlight selects only cur value.
-        if(self.lastsearch == search and (dir != 0 or self.lastlight)): # executed if its a repeat of the same search, AND either: the current move isn't a highlight OR the last move was a highlight 
+        # executed on repeat searches. it moves you to the next value in the selected direction.
+        if(self.lastsearch == search): # executed if its a repeat of the same search
             self.searchindex += (dir) # moves selection in direction. rhymes
 
             if(self.searchindex not in range(len(self.searchlist))):
@@ -104,24 +100,8 @@ class LogWindow(QMainWindow): # The window class
 
             self.toplabel_set("Viewing " + f"{self.searchindex + 1:,}" + " of " + f"{len(self.searchlist):,}" + ' results for "' + search + '".', self.tableBox) # result you're viewing out of total
             self.tableBox.setCurrentItem(self.searchlist[self.searchindex]) # highlight and go to new selection
-            self.lastlight = False # the last search was NOT a highlight, because this code only selects one.
             return # exit the method.
-        elif(self.lastsearch == search and dir == 0): # else if the search is the same as last time AND the last move wasn't a highlight (the lastmove should always not be highlight here)
-            QApplication.setOverrideCursor(Qt.WaitCursor)
 
-            if(len(self.searchlist)) <= self.maxsearch:
-                for i in range(len(self.searchlist)): # iterates thru searchlist coords
-                    self.searchlist[i].setSelected(True) # ...and highlights everything WITHOUT making an entire new list
-                    #self.tableBox.setCurrentItem(self.searchlist[i]) # this sets current position every single highlight. inefficient.
-            else:
-                for i in range(self.maxsearch):
-                    if(i < len(self.searchlist)):
-                        self.searchlist[i].setSelected(True) # placeholder for the actual search. i need to make more of these into functions.
-
-            self.toplabel_set("Viewing " + f"{self.searchindex + 1:,}" + " of " + f"{len(self.searchlist):,}" + ' results for "' + search + '". Highlighting.', self.tableBox) # tells user its highlighted
-            self.lastlight = True # the last move WAS a highlight
-            QApplication.restoreOverrideCursor()
-            return
 
         # executed on new searches, sets the result list and initial position.
         self.toplabel_set("Searching...", self.tableBox)
@@ -138,23 +118,7 @@ class LogWindow(QMainWindow): # The window class
         if(len(self.searchlist) > 0): # goes to the first or last value if the searchlist has results.
             self.searchindex = 0 if dir != -1 else len(self.searchlist) - 1
             self.tableBox.setCurrentItem(self.searchlist[0 if dir == 1 else dir]) # go to the first result
-
-            if(dir == 0):
-                self.lastlight = True
-                if(len(self.searchlist) <= self.maxsearch):
-                    for i in range(len(self.searchlist)):
-                        self.searchlist[i].setSelected(True)
-                    self.toplabel_set("Viewing all " + f"{len(self.searchlist):,}" + ' results for "' + search + '".', self.tableBox)
-                else:
-                    for i in range(round(self.maxsearch / 2, None)): # searchindex isn't needed on first highlight.
-                        self.searchlist[i].setSelected(True) # TODO: set only the 50 or 1000 in front of and behind the current search index to be highlighted depending on what's faster.
-                        self.searchlist[-(i + 1)].setSelected(True)
-                    self.toplabel_set("Viewing " + f"{self.maxsearch:,}" + " of " + f"{len(self.searchlist):,}" + ' results for "' + search + '".', self.tableBox)
-                
-            else:
-                self.lastlight = False
-                self.toplabel_set("Viewing " + f"{self.searchindex + 1:,}" + " of " + f"{len(self.searchlist):,}" + ' results for "' + search + '".', self.tableBox)
-            
+            self.toplabel_set("Viewing " + f"{self.searchindex + 1:,}" + " of " + f"{len(self.searchlist):,}" + ' results for "' + search + '".', self.tableBox)
             self.lastsearch = search 
         else:
             self.toplabel_set('No results for "' + search + '".', self.tableBox)
@@ -238,7 +202,6 @@ class LogWindow(QMainWindow): # The window class
                     data = data.split("\n") # removes blanks between lines and splits each value into one list.
         except:
             print("FILE NOT FOUND.")
-            self.inputBox.clear()
             self.toplabel_set("Filepath not found.", -1)
             QApplication.restoreOverrideCursor()
             return -1
