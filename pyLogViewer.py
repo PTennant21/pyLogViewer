@@ -15,6 +15,7 @@ class LogWindow(QMainWindow): # The window class
         self.lastsearch = -1 # the last search, as a string. used for comparison to current search
         self.searchindex = -1 # which position in the searchlist the user is at
         self.lastlight = False # allows you to click highlight again to view your current place
+        self.maxsearch = 1000
 
         self.label = QLabel("Initializing...")
         
@@ -101,18 +102,23 @@ class LogWindow(QMainWindow): # The window class
             if(self.searchindex not in range(len(self.searchlist))):
                 self.searchindex = 0 if dir != -1 else len(self.searchlist) - 1
 
-            self.toplabel_set("Viewing " + str(self.searchindex + 1) + " of " + str(len(self.searchlist)) + ' results for "' + search + '".', self.tableBox) # result you're viewing out of total
+            self.toplabel_set("Viewing " + f"{self.searchindex + 1:,}" + " of " + f"{len(self.searchlist):,}" + ' results for "' + search + '".', self.tableBox) # result you're viewing out of total
             self.tableBox.setCurrentItem(self.searchlist[self.searchindex]) # highlight and go to new selection
             self.lastlight = False # the last search was NOT a highlight, because this code only selects one.
             return # exit the method.
         elif(self.lastsearch == search and dir == 0): # else if the search is the same as last time AND the last move wasn't a highlight (the lastmove should always not be highlight here)
             QApplication.setOverrideCursor(Qt.WaitCursor)
 
-            for i in range(len(self.searchlist)): # iterates thru searchlist coords
-                self.searchlist[i].setSelected(True) # ...and highlights everything WITHOUT making an entire new list
-                #self.tableBox.setCurrentItem(self.searchlist[i]) # this sets current position every single highlight. inefficient.
+            if(len(self.searchlist)) <= self.maxsearch:
+                for i in range(len(self.searchlist)): # iterates thru searchlist coords
+                    self.searchlist[i].setSelected(True) # ...and highlights everything WITHOUT making an entire new list
+                    #self.tableBox.setCurrentItem(self.searchlist[i]) # this sets current position every single highlight. inefficient.
+            else:
+                for i in range(self.maxsearch):
+                    if(i < len(self.searchlist)):
+                        self.searchlist[i].setSelected(True) # placeholder for the actual search. i need to make more of these into functions.
 
-            self.toplabel_set("Viewing " + str(self.searchindex + 1) + " of " + str(len(self.searchlist)) + ' results for "' + search + '". Highlighting.', self.tableBox) # tells user its highlighted
+            self.toplabel_set("Viewing " + f"{self.searchindex + 1:,}" + " of " + f"{len(self.searchlist):,}" + ' results for "' + search + '". Highlighting.', self.tableBox) # tells user its highlighted
             self.lastlight = True # the last move WAS a highlight
             QApplication.restoreOverrideCursor()
             return
@@ -135,12 +141,19 @@ class LogWindow(QMainWindow): # The window class
 
             if(dir == 0):
                 self.lastlight = True
-                for i in range(len(self.searchlist)):
-                    self.searchlist[i].setSelected(True)
-                self.toplabel_set("Viewing all " + str(len(self.searchlist)) + ' results for "' + search + '".', self.tableBox)
+                if(len(self.searchlist) <= self.maxsearch):
+                    for i in range(len(self.searchlist)):
+                        self.searchlist[i].setSelected(True)
+                    self.toplabel_set("Viewing all " + f"{len(self.searchlist):,}" + ' results for "' + search + '".', self.tableBox)
+                else:
+                    for i in range(round(self.maxsearch / 2, None)): # searchindex isn't needed on first highlight.
+                        self.searchlist[i].setSelected(True) # TODO: set only the 50 or 1000 in front of and behind the current search index to be highlighted depending on what's faster.
+                        self.searchlist[-(i + 1)].setSelected(True)
+                    self.toplabel_set("Viewing " + f"{self.maxsearch:,}" + " of " + f"{len(self.searchlist):,}" + ' results for "' + search + '".', self.tableBox)
+                
             else:
                 self.lastlight = False
-                self.toplabel_set("Viewing " + str(self.searchindex + 1) + " of " + str(len(self.searchlist)) + ' results for "' + search + '".', self.tableBox)
+                self.toplabel_set("Viewing " + f"{self.searchindex + 1:,}" + " of " + f"{len(self.searchlist):,}" + ' results for "' + search + '".', self.tableBox)
             
             self.lastsearch = search 
         else:
@@ -199,7 +212,7 @@ class LogWindow(QMainWindow): # The window class
         if(table == -1): # -1 replaces the table in some instances to avoid displaying row count
             self.label.setText("Rows: N/A\n" + action) # yeah.
         else: # otherwise
-            self.label.setText("Rows: " + str(self.tableBox.rowCount()) + "\n" + action) # it's just the row count !
+            self.label.setText("Rows: " + f"{self.tableBox.rowCount():,}" + "\n" + action) # it's just the row count !
         app.processEvents() # this just makes the application display actively update so the user knows it isn't dead
 
     def fixup_date(self, date, type): # formats the dates in either date1 or date2 to be uniform and sortable! ADD THIS TO MAIN LOOP.
@@ -233,7 +246,7 @@ class LogWindow(QMainWindow): # The window class
         self.tableBox.clear()
         self.tableBox.setColumnCount(11)
         self.tableBox.setRowCount(len(data))
-        self.tableBox.setHorizontalHeaderLabels(["IP Address", "Day", "Date1", "Date2", "Computer", "User", "Process", "New", "Old", "Min", "Max"])
+        self.tableBox.setHorizontalHeaderLabels(["IP Address", "Day", "New Date", "Old Date", "Computer", "User", "Process Variable", "New", "Old", "Min", "Max"])
         self.tableBox.setUpdatesEnabled(False)
         maxline = self.maxlineBox.value()
         a = 0
