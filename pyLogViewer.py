@@ -3,20 +3,19 @@ from PyQt5 import QtCore # imports qtcore module
 from PyQt5.QtCore import QSize, Qt # imports qsize and qt classes
 from PyQt5.QtWidgets import (QApplication, QSpinBox, QCheckBox, QFileDialog, QMainWindow, QPushButton,
                              QLabel, QTableWidget, QTableWidgetItem, QLineEdit, QVBoxLayout, QHBoxLayout,
-                             QWidget) # imports.. a lot of widget classes
+                             QStackedLayout, QWidget) # imports.. a lot of widget classes
 
 class LogWindow(QMainWindow): # The window class
     def __init__(self): # initializes class values
         super().__init__() # initializes it with mainwindow
-        self.version = "v0.5.7"
         self.filepath = "data.txt"
+        self.version = "v0.5.8"
         self.setWindowTitle("pyLogViewer " + self.version + " - " + self.filepath)
         self.sortDown = True # always sort columns descending by default
         self.lastIndex = 0 # last selected column, 0 is default
-        self.searchlist = -1 # contains coordinates of current search matches
+        self.searchlist = -1 # contains items which match current search
         self.lastsearch = -1 # the last search, as a string. used for comparison to current search
         self.searchindex = -1 # which position in the searchlist the user is at
-        self.maxsearch = 1000
 
         self.label = QLabel("Initializing...")
         
@@ -33,7 +32,12 @@ class LogWindow(QMainWindow): # The window class
         self.tableBox = QTableWidget() # table, contains and shows data
         self.tableBox.setEditTriggers(QTableWidget.NoEditTriggers) # prevents editing of table items
         self.fileRead() # sorts the data and passes it to tablebox
-        self.tableBox.horizontalHeader().sectionClicked.connect(self.tablesort) # allows for sorting via header click
+        self.tableBox.horizontalHeader().sectionClicked.connect(lambda logicalindex: self.tablesort(logicalindex, self.tableBox)) # allows for sorting via header click
+        #useless self.table = self.tableBox
+
+        self.lineBox = QTableWidget() # contains every line with a matching search item. takes longer, but faster than highlighting.
+        self.lineBox.setEditTriggers(QTableWidget.NoEditTriggers) # prevents editing of table items
+        self.lineBox.horizontalHeader().sectionClicked.connect(lambda logicalindex: self.tablesort(logicalindex, self.tableBox)) # allows for sorting via header click
 
         self.inputBox = QLineEdit() # editable line, contains search value
         self.inputBox.installEventFilter(self) # checks for enter presses
@@ -52,13 +56,6 @@ class LogWindow(QMainWindow): # The window class
         self.setMinimumSize(QSize(510, 200))
         self.resize(900, 500)
 
-        self.bottombar = QHBoxLayout() # horizontal layout, allows multiple widgets going horizontally. used for the search box and buttons
-        self.bottombar.insertWidget(1, self.buttonFile)
-        self.bottombar.insertWidget(2, self.inputBox)
-        self.bottombar.insertWidget(3, self.buttonSprev)
-        self.bottombar.insertWidget(4, self.buttonSnext)
-        self.bottombar.insertWidget(5, self.caseCheck)
-
         self.topbar = QHBoxLayout()
         self.topbar.insertWidget(1, self.label)
         self.topbar.addStretch(2)
@@ -67,17 +64,28 @@ class LogWindow(QMainWindow): # The window class
         self.topbar.insertWidget(5, self.refreshLabel)
         self.topbar.insertWidget(6, self.refreshBox)
 
+        self.tables = QStackedLayout()
+        self.tables.addWidget(self.tableBox)
+        self.tables.addWidget(self.lineBox)
+
+        self.bottombar = QHBoxLayout() # horizontal layout, allows multiple widgets going horizontally. used for the search box and buttons
+        self.bottombar.insertWidget(1, self.buttonFile)
+        self.bottombar.insertWidget(2, self.inputBox)
+        self.bottombar.insertWidget(3, self.buttonSprev)
+        self.bottombar.insertWidget(4, self.buttonSnext)
+        self.bottombar.insertWidget(5, self.caseCheck)
+
         self.toplabel_set("Click a header to sort, or use the box to search.", self.tableBox)
 
         self.layout = QVBoxLayout() # object containing the vertical layout
         self.layout.addLayout(self.topbar)
-        self.layout.addWidget(self.tableBox)
+        self.layout.addLayout(self.tables)
         self.layout.addLayout(self.bottombar) # the entire horizontal search layout. they can be nested... how useful!
 
-        container = QWidget() # widget containing multiple laid out widgets
-        container.setLayout(self.layout) # give it the layout!~
+        self.container = QWidget() # widget containing multiple laid out widgets
+        self.container.setLayout(self.layout) # give it the layout!~
 
-        self.setCentralWidget(container) # makes the container the central widget
+        self.setCentralWidget(self.container) # makes the container the central widget
 
     def clearsearch(self): # clears the search variables. prevents issues and forces next search to occur
         self.searchlist = -1
@@ -87,41 +95,68 @@ class LogWindow(QMainWindow): # The window class
     def searchtable(self, dir): # creates list of all occurrences of specified value and subsequently proceeds through it
         search = self.inputBox.text() # the current input from the input box widget
 
-        if(search == None or search == ""):
+        if(search == None or search == ""): # TODO: this block returns the view to the standard table and deletes all the search stuff.
             self.toplabel_set("No search value entered.", self.tableBox) # does this if you try to search nothing for some reason
+            self.lineBox.clearSelection() # removes selections in table widget
+            self.tables.setCurrentIndex(0)
+            self.searchindex = -2
             return # exit the method.
 
         # executed on repeat searches. it moves you to the next value in the selected direction.
         if(self.lastsearch == search): # executed if its a repeat of the same search
+            if(self.tables.currentIndex != 1):
+                self.tables.setCurrentIndex(1)
+
             self.searchindex += (dir) # moves selection in direction. rhymes
 
             if(self.searchindex not in range(len(self.searchlist))):
                 self.searchindex = 0 if dir != -1 else len(self.searchlist) - 1
 
-            self.toplabel_set("Viewing " + f"{self.searchindex + 1:,}" + " of " + f"{len(self.searchlist):,}" + ' results for "' + search + '".', self.tableBox) # result you're viewing out of total
-            self.tableBox.setCurrentItem(self.searchlist[self.searchindex]) # highlight and go to new selection
+            self.toplabel_set("Viewing " + f"{self.searchindex + 1:,}" + " of " + f"{len(self.searchlist):,}" + ' results for "' + search + '".', self.lineBox) # result you're viewing out of total
+            self.lineBox.setCurrentCell(self.searchlist[self.searchindex][0], self.searchlist[self.searchindex][1]) # highlight and go to new selection
             return # exit the method.
 
 
         # executed on new searches, sets the result list and initial position.
         self.toplabel_set("Searching...", self.tableBox)
         QApplication.setOverrideCursor(Qt.WaitCursor)
-        
-        if(not self.caseCheck.isChecked()): # flags to determine case sensitivity
-            flags = Qt.MatchFlag.MatchContains
-        else:
-            flags = Qt.MatchFlag.MatchContains | Qt.MatchFlag.MatchCaseSensitive
 
         self.tableBox.clearSelection() # removes selections in table widget
-        self.searchlist = self.tableBox.findItems(search, flags) # puts all items from table into list
+        self.searchlist = [] # puts all items from table into list
+        self.lineBox.clear()
+        self.lineBox.setRowCount(self.tableBox.rowCount())
+        self.lineBox.setColumnCount(self.tableBox.columnCount())
+        self.lineBox.setHorizontalHeaderLabels(["IP Address", "Day", "New Date", "Old Date", "Computer", "User", "Process Variable", "New", "Old", "Min", "Max"])
+
+        foundrow = False # checks if it's already saved this row.
+        temprow = 0
+        
+        for row in range(self.tableBox.rowCount()):
+            foundrow = False
+            for col in range(self.tableBox.columnCount()):
+                if((not self.caseCheck.isChecked() and self.tableBox.item(row, col).text().lower().find(search.lower()) != -1) or self.tableBox.item(row, col).text().find(search) != -1):
+                    self.searchlist.append([temprow, col])
+                    if(not foundrow):
+                        for tempcol in range(self.tableBox.columnCount()): # sets next row in lineBox with all items in the found row
+                            self.lineBox.setItem(temprow, tempcol, QTableWidgetItem(self.tableBox.item(row, tempcol).text()))
+                        temprow += 1
+                        foundrow = True
 
         if(len(self.searchlist) > 0): # goes to the first or last value if the searchlist has results.
+            self.lineBox.setRowCount(temprow)
+            self.lineBox.resizeColumnsToContents()
+            self.tables.setCurrentIndex(1)
             self.searchindex = 0 if dir != -1 else len(self.searchlist) - 1
-            self.tableBox.setCurrentItem(self.searchlist[0 if dir == 1 else dir]) # go to the first result
-            self.toplabel_set("Viewing " + f"{self.searchindex + 1:,}" + " of " + f"{len(self.searchlist):,}" + ' results for "' + search + '".', self.tableBox)
+            self.lineBox.setCurrentCell(self.searchlist[0 if dir == 1 else dir][0], self.searchlist[0 if dir == 1 else dir][1]) # go to the first result
+            self.toplabel_set("Viewing " + f"{self.searchindex + 1:,}" + " of " + f"{len(self.searchlist):,}" + ' results for "' + search + '".', self.lineBox)
             self.lastsearch = search 
         else:
+            self.lineBox.clearSelection() # removes selections in table widget
             self.toplabel_set('No results for "' + search + '".', self.tableBox)
+            self.tables.setCurrentIndex(0)
+        
+        app.processEvents()
+
 
         QApplication.restoreOverrideCursor()
                 
@@ -156,18 +191,18 @@ class LogWindow(QMainWindow): # The window class
         self.toplabel_set("Click a header to sort.", self.tableBox) # its a label alright
         self.setWindowTitle("pyLogViewer " + self.version + " - " + self.filepath) # window name
 
-    def tablesort(self, logicalIndex): # sorts the selected column when... a column header is selected.
-        self.toplabel_set("Sorting...", self.tableBox) # loading message you know the drill by now
+    def tablesort(self, logicalIndex, table): # sorts the selected column when... a column header is selected.
+        self.toplabel_set("Sorting...", table) # loading message you know the drill by now
         QApplication.setOverrideCursor(Qt.WaitCursor) # loading cursor.
-        headerTxt = self.tableBox.horizontalHeaderItem(logicalIndex).text() # the header text to show later
+        headerTxt = table.horizontalHeaderItem(logicalIndex).text() # the header text to show later
         if(logicalIndex != self.lastIndex): # checks if this index is the same as the last one sorted
             self.sortDown = True # if not, it will always start sorted descending
             self.lastIndex = logicalIndex # sets the last index to this one
         else: # if so, it will sort the opposite of last time
             self.sortDown = not self.sortDown # yeah. inversion
         
-        self.tableBox.sortItems(logicalIndex, self.sortDown) # sorts the items at specified index
-        self.toplabel_set("Sorting " + headerTxt + (" descending" if self.sortDown else " ascending"), self.tableBox) # tells user how its sorted
+        table.sortItems(logicalIndex, self.sortDown) # sorts the items at specified index
+        self.toplabel_set("Sorting " + headerTxt + (" descending" if self.sortDown else " ascending"), table) # tells user how its sorted
 
         self.clearsearch() # clears the search variables, they will be incorrect otherwise
         QApplication.restoreOverrideCursor() # no more loading cursor.
@@ -260,4 +295,9 @@ window = LogWindow() # the entire class which was created above
 window.show()
 app.exec()
 
-# TODO: limit "highlight all" to only highlight the nearest thousand or so values.
+#TODO: Make the linebox get used instead of the tablebox after searching.
+#TODO: Reorganize the rows, remove week day.
+#TODO: Add timer functionality.
+#TODO: Options menu for extra configuration.
+#TODO: Config file to save default log file and other options.
+#TODO: Default sort by new date.
