@@ -9,7 +9,7 @@ class LogWindow(QMainWindow): # The window class
     def __init__(self): # initializes class values
         super().__init__() # initializes it with mainwindow
         self.filepath = "data.txt"
-        self.version = "v0.5.8"
+        self.version = "v0.6.0"
         self.setWindowTitle("pyLogViewer " + self.version + " - " + self.filepath)
         self.sortDown = True # always sort columns descending by default
         self.lastIndex = 0 # last selected column, 0 is default
