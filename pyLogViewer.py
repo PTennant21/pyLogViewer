@@ -8,8 +8,10 @@ from PyQt5.QtWidgets import (QApplication, QSpinBox, QCheckBox, QFileDialog, QMa
 class LogWindow(QMainWindow): # The window class
     def __init__(self): # initializes class values
         super().__init__() # initializes it with mainwindow
+
+        # misc variables
         self.filepath = "data.txt"
-        self.version = "v0.6.1"
+        self.version = "v0.6.2"
         self.setWindowTitle("pyLogViewer " + self.version + " - " + self.filepath)
         self.sortDown = True # always sort columns descending by default
         self.lastIndex = 0 # last selected column, 0 is default
@@ -17,18 +19,24 @@ class LogWindow(QMainWindow): # The window class
         self.lastsearch = -1 # the last search, as a string. used for comparison to current search
         self.searchindex = -1 # which position in the searchlist the user is at
 
+        # widgets
         self.label = QLabel("Initializing...")
-        
-        self.refreshLabel = QLabel("Refresh:")
-        self.refreshLabel.setToolTip("The amount of seconds until the list is automatically refreshed.")
-        self.refreshBox = QSpinBox() # editable line, contains search value
 
-        self.maxLabel = QLabel("Max:")
+        self.refreshLabel = QLabel("Refresh:")
+        self.refreshBox = QSpinBox() # editable line, contains search value
+        self.refreshBox.setToolTip("Amount of seconds until the list is automatically refreshed.")
+
+        self.maxLabel = QLabel("Max Rows:")
         self.maxlineBox = QSpinBox() # editable line, contains search value
         self.maxlineBox.setMaximum(1000000)
         self.maxlineBox.setSingleStep(10000)
         self.maxlineBox.setValue(150000) # maximum amount of lines to read
         self.maxlineBox.setGroupSeparatorShown(True)
+        self.maxlineBox.setToolTip("Maximum amount of lines to read from the file.")
+
+        self.buttonFile = QPushButton("Open File")
+        self.buttonFile.clicked.connect(self.filePrompt) # opens a file prompt when the button is clicked
+        self.buttonFile.setToolTip("Import data from a new file.")
 
         self.tableBox = QTableWidget() # table, contains and shows data
         self.tableBox.setEditTriggers(QTableWidget.NoEditTriggers) # prevents editing of table items
@@ -39,25 +47,22 @@ class LogWindow(QMainWindow): # The window class
         self.lineBox = QTableWidget() # contains every line with a matching search item. takes longer, but faster than highlighting.
         self.lineBox.setEditTriggers(QTableWidget.NoEditTriggers) # prevents editing of table items
         self.lineBox.horizontalHeader().sectionClicked.connect(lambda logicalindex: self.tablesort(logicalindex, self.lineBox)) # allows for sorting via header click
+        self.lineBox.setHorizontalHeaderLabels(["New Date", "Old Date", "Process Variable", "New", "Old", "Min", "Max", "User", "Computer", "IP Address"])
 
         self.inputBox = QLineEdit() # editable line, contains search value
         self.inputBox.installEventFilter(self) # checks for enter presses
         self.inputBox.setPlaceholderText("Enter a value to search.")
 
-        self.caseCheck = QCheckBox("Case sensitive?")
-        self.caseCheck.stateChanged.connect(lambda : self.clearsearch(False)) # clears search so the next one re-evaluates the list with new conditions
-
         self.buttonSprev = QPushButton("Find Prev") # prev result of search
         self.buttonSprev.clicked.connect(lambda : self.searchtable(-1)) # can't connect a method with an argument so lambda is needed
-        self.buttonSprev.setToolTip("Find a previous instance of the value in the search box.")
+        self.buttonSprev.setToolTip("Find previous instance of the value in the search box.")
 
         self.buttonSnext = QPushButton("Find Next") # next result of search
         self.buttonSnext.clicked.connect(lambda : self.searchtable(1))
-        self.buttonSnext.setToolTip("Find a next instance of the value in the search box.")
+        self.buttonSnext.setToolTip("Find next instance of the value in the search box.")
 
-        self.buttonFile = QPushButton("Open File")
-        self.buttonFile.clicked.connect(self.filePrompt) # opens a file prompt when the button is clicked
-        self.buttonFile.setToolTip("Import data from a new file.")
+        self.caseCheck = QCheckBox("Case sensitive?")
+        self.caseCheck.stateChanged.connect(self.clearsearch) # clears search so the next one re-evaluates the list with new conditions
 
         self.setMinimumSize(QSize(510, 200))
         self.resize(900, 500)
@@ -69,19 +74,17 @@ class LogWindow(QMainWindow): # The window class
         self.topbar.insertWidget(4, self.maxlineBox)
         self.topbar.insertWidget(5, self.refreshLabel)
         self.topbar.insertWidget(6, self.refreshBox)
+        self.topbar.insertWidget(7, self.buttonFile)
 
         self.tables = QStackedLayout()
         self.tables.addWidget(self.tableBox)
         self.tables.addWidget(self.lineBox)
 
         self.bottombar = QHBoxLayout() # horizontal layout, allows multiple widgets going horizontally. used for the search box and buttons
-        self.bottombar.insertWidget(1, self.buttonFile)
-        self.bottombar.insertWidget(2, self.inputBox)
-        self.bottombar.insertWidget(3, self.buttonSprev)
-        self.bottombar.insertWidget(4, self.buttonSnext)
-        self.bottombar.insertWidget(5, self.caseCheck)
-
-        self.toplabel_set("Click a header to sort, or use the box to search.", self.tableBox)
+        self.bottombar.insertWidget(1, self.inputBox)
+        self.bottombar.insertWidget(2, self.buttonSprev)
+        self.bottombar.insertWidget(3, self.buttonSnext)
+        self.bottombar.insertWidget(4, self.caseCheck)
 
         self.layout = QVBoxLayout() # object containing the vertical layout
         self.layout.addLayout(self.topbar)
@@ -92,15 +95,12 @@ class LogWindow(QMainWindow): # The window class
         self.container.setLayout(self.layout) # give it the layout!~
 
         self.setCentralWidget(self.container) # makes the container the central widget
+        self.toplabel_set("Click a header to sort, or use the box to search.", self.tableBox) # display after everything is done loading.
 
-    def clearsearch(self, fullclear): # clears the search variables. prevents issues and forces next search to occur
+    def clearsearch(self): # clears the search variables. prevents issues and forces next search to occur
         self.searchlist = -1
         self.searchindex = -1
         self.lastsearch = -1
-
-        if(fullclear):
-            self.tables.setCurrentIndex(0)
-            self.lineBox.clear()
 
     def searchtable(self, dir): # creates list of all occurrences of specified value and subsequently proceeds through it
         search = self.inputBox.text() # the current input from the input box widget
@@ -136,7 +136,6 @@ class LogWindow(QMainWindow): # The window class
         self.lineBox.clear()
         self.lineBox.setRowCount(self.tableBox.rowCount())
         self.lineBox.setColumnCount(self.tableBox.columnCount())
-        self.lineBox.setHorizontalHeaderLabels(["IP Address", "Day", "New Date", "Old Date", "Computer", "User", "Process Variable", "New", "Old", "Min", "Max"])
 
         foundrow = False # checks if it's already saved this row.
         temprow = 0
@@ -154,12 +153,12 @@ class LogWindow(QMainWindow): # The window class
 
         if(len(self.searchlist) > 0): # goes to the first or last value if the searchlist has results.
             self.lineBox.setRowCount(temprow)
-            self.lineBox.resizeColumnsToContents()
             self.tables.setCurrentIndex(1)
             self.searchindex = 0 if dir != -1 else len(self.searchlist) - 1
             self.lineBox.setCurrentCell(self.searchlist[0 if dir == 1 else dir][0], self.searchlist[0 if dir == 1 else dir][1]) # go to the first result
             self.toplabel_set("Viewing " + f"{self.searchindex + 1:,}" + " of " + f"{len(self.searchlist):,}" + ' results for "' + search + '".', self.lineBox)
-            self.lastsearch = search 
+            self.lastsearch = search
+            self.lineBox.resizeColumnsToContents()
         else:
             self.lineBox.clearSelection() # removes selections in table widget
             self.toplabel_set('No results for "' + search + '".', self.tableBox)
@@ -189,7 +188,10 @@ class LogWindow(QMainWindow): # The window class
     def reinit(self): # REINITIALIZATION!!! Brings everything to zero and reads a new file.
         self.sortDown = True # always sort descending by default
         self.lastIndex = 0 # last selected column, 0 is default
-        self.clearsearch(True) # clears the search variables
+        self.clearsearch() # clears the search variables
+        self.tables.setCurrentIndex(0)
+        self.lineBox.clear()
+        
         try: # if the code fails, the exception is handled.
             self.fileRead() # reads file and adds data to the data table
         except:
@@ -215,7 +217,7 @@ class LogWindow(QMainWindow): # The window class
         table.sortItems(logicalIndex, self.sortDown) # sorts the items at specified index
         self.toplabel_set("Sorting " + headerTxt + (" descending" if self.sortDown else " ascending"), table) # tells user how its sorted
 
-        self.clearsearch(False) # clears the search variables, they will be incorrect otherwise
+        self.clearsearch() # clears the search variables, they will be incorrect otherwise
         QApplication.restoreOverrideCursor() # no more loading cursor.
 
     def toplabel_set(self, action, table): # sets the top label to all sorts of things.
@@ -253,15 +255,15 @@ class LogWindow(QMainWindow): # The window class
             return -1
         
         self.tableBox.clear()
-        self.tableBox.setColumnCount(11)
+        self.tableBox.setColumnCount(10)
         self.tableBox.setRowCount(len(data))
-        self.tableBox.setHorizontalHeaderLabels(["IP Address", "Day", "New Date", "Old Date", "Computer", "User", "Process Variable", "New", "Old", "Min", "Max"])
+        self.tableBox.setHorizontalHeaderLabels(["New Date", "Old Date", "Process Variable", "New", "Old", "Min", "Max", "User", "Computer", "IP Address"])
         self.tableBox.setUpdatesEnabled(False)
         maxline = self.maxlineBox.value()
         if(maxline == 0):
             maxline = len(data)
         a = 0
-        b = 0
+
         self.toplabel_set("Adding data to table...", -1)
 
         while a < len(data): # splits each line of the data.
@@ -271,27 +273,34 @@ class LogWindow(QMainWindow): # The window class
                 data.pop(a)
                 continue
 
-            while b < len(data[a]):
 
-                if(b == 2): # turns this index into date 1, then removes redundant data
-                    data[a][2] = self.fixup_date(data[a][5] + "-" + data[a][2] + "-" + data[a][3] + " " + data[a][4], 1)
-                    for i in range(3):
-                        data[a].pop(3)
 
-                if(b == 3): # turns this index into date 2, removes redundant data
-                    data[a][3] =  self.fixup_date(data[a][3] + " " + data[a][4], 2)
-                    data[a].pop(4)
+            data[a][2] = self.fixup_date(data[a][5] + "-" + data[a][2] + "-" + data[a][3] + " " + data[a][4], 1)
+            for i in range(3):
+                data[a].pop(3)
 
-                self.tableBox.setItem(a, b, QTableWidgetItem(data[a][b])) # creates and sets tablewidgetitem in table for each string
+            data[a][3] =  self.fixup_date(data[a][3] + " " + data[a][4], 2)
+            data[a].pop(4)
 
-                b += 1
+            self.tableBox.setItem(a, 0, QTableWidgetItem(data[a][2]))
+            self.tableBox.setItem(a, 1, QTableWidgetItem(data[a][3]))
+            self.tableBox.setItem(a, 2, QTableWidgetItem(data[a][6]))
+            self.tableBox.setItem(a, 3, QTableWidgetItem(data[a][7]))
+            self.tableBox.setItem(a, 4, QTableWidgetItem(data[a][8]))
 
-            if(len(data[a]) == 9): # checks for and adds blank items to list
-                self.tableBox.setItem(a, 9, QTableWidgetItem("N/A"))
-                self.tableBox.setItem(a, 10, QTableWidgetItem("N/A"))
+            if(len(data[a]) == 9): # checks for and adds blank min/max to list
+                self.tableBox.setItem(a, 5, QTableWidgetItem("N/A"))
+                self.tableBox.setItem(a, 6, QTableWidgetItem("N/A"))
+            else:
+                self.tableBox.setItem(a, 5, QTableWidgetItem(data[a][9]))
+                self.tableBox.setItem(a, 6, QTableWidgetItem(data[a][10]))
+
+            self.tableBox.setItem(a, 7, QTableWidgetItem(data[a][5]))
+            self.tableBox.setItem(a, 8, QTableWidgetItem(data[a][4]))
+            self.tableBox.setItem(a, 9, QTableWidgetItem(data[a][0]))
+
 
             a += 1
-            b = 0
             if(a >= maxline):
                 break
 
