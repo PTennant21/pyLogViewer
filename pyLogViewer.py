@@ -268,8 +268,18 @@ class LogWindow(QMainWindow): # The window class
             self.tableBox.setItem(a, 0, QTableWidgetItem(data[a][2]))
             self.tableBox.setItem(a, 1, QTableWidgetItem(data[a][3]))
             self.tableBox.setItem(a, 2, QTableWidgetItem(data[a][6]))
-            self.tableBox.setItem(a, 3, QTableWidgetItem(data[a][7]))
-            self.tableBox.setItem(a, 4, QTableWidgetItem(data[a][8]))
+
+            self.tableBox.setItem(a, 3, QTableWidgetItem())
+            try: # only adds numeric portion so sorting works correctly.
+                self.tableBox.item(a, 3).setData(Qt.ItemDataRole.EditRole, float(data[a][7][data[a][7].find("=") + 1:]))
+            except:
+                self.tableBox.item(a, 3).setText(data[a][7][data[a][7].find("=") + 1:])
+
+            self.tableBox.setItem(a, 4, QTableWidgetItem())
+            try:
+                self.tableBox.item(a, 4).setData(Qt.ItemDataRole.EditRole, float(data[a][8][data[a][8].find("=") + 1:]))
+            except:
+                self.tableBox.item(a, 4).setText(data[a][8][data[a][8].find("=") + 1:])
 
             if(len(data[a]) == 9): # checks for and adds blank min/max to list
                 self.tableBox.setItem(a, 5, QTableWidgetItem("N/A"))
