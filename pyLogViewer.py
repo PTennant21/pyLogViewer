@@ -13,8 +13,6 @@ class LogWindow(QMainWindow): # The window class
         self.filepath = "data.txt"
         self.version = "v0.6.2"
         self.setWindowTitle("pyLogViewer " + self.version + " - " + self.filepath)
-        self.sortDown = True # always sort columns descending by default
-        self.lastIndex = 0 # last selected column, 0 is default
         self.searchlist = -1 # contains items which match current search
         self.lastsearch = -1 # the last search, as a string. used for comparison to current search
         self.searchindex = -1 # which position in the searchlist the user is at
@@ -41,13 +39,13 @@ class LogWindow(QMainWindow): # The window class
         self.tableBox = QTableWidget() # table, contains and shows data
         self.tableBox.setEditTriggers(QTableWidget.NoEditTriggers) # prevents editing of table items
         self.fileRead() # sorts the data and passes it to tablebox
-        self.tableBox.horizontalHeader().sectionClicked.connect(lambda logicalindex: self.tablesort(logicalindex, self.tableBox)) # allows for sorting via header click
-        #useless self.table = self.tableBox
+        self.tableBox.setSortingEnabled(True)
+        self.tableBox.horizontalHeader().sectionClicked.connect(self.clearsearch) # allows for sorting via header click
 
         self.lineBox = QTableWidget() # contains every line with a matching search item. takes longer, but faster than highlighting.
         self.lineBox.setEditTriggers(QTableWidget.NoEditTriggers) # prevents editing of table items
-        self.lineBox.horizontalHeader().sectionClicked.connect(lambda logicalindex: self.tablesort(logicalindex, self.lineBox)) # allows for sorting via header click
-        self.lineBox.setHorizontalHeaderLabels(["New Date", "Old Date", "Process Variable", "New", "Old", "Min", "Max", "User", "Computer", "IP Address"])
+        self.lineBox.setSortingEnabled(True)
+        self.lineBox.horizontalHeader().sectionClicked.connect(self.clearsearch) # allows for sorting via header click
 
         self.inputBox = QLineEdit() # editable line, contains search value
         self.inputBox.installEventFilter(self) # checks for enter presses
@@ -154,11 +152,13 @@ class LogWindow(QMainWindow): # The window class
         if(len(self.searchlist) > 0): # goes to the first or last value if the searchlist has results.
             self.lineBox.setRowCount(temprow)
             self.tables.setCurrentIndex(1)
+            self.lineBox.resizeColumnsToContents()
+            self.lineBox.setHorizontalHeaderLabels(["New Date", "Old Date", "Process Variable", "New", "Old", "Min", "Max", "User", "Computer", "IP Address"])
+            #self.tablesort(0, self.lineBox) Might be USELESS if the og table is already sorted.
             self.searchindex = 0 if dir != -1 else len(self.searchlist) - 1
             self.lineBox.setCurrentCell(self.searchlist[0 if dir == 1 else dir][0], self.searchlist[0 if dir == 1 else dir][1]) # go to the first result
             self.toplabel_set("Viewing " + f"{self.searchindex + 1:,}" + " of " + f"{len(self.searchlist):,}" + ' results for "' + search + '".', self.lineBox)
             self.lastsearch = search
-            self.lineBox.resizeColumnsToContents()
         else:
             self.lineBox.clearSelection() # removes selections in table widget
             self.toplabel_set('No results for "' + search + '".', self.tableBox)
@@ -186,8 +186,6 @@ class LogWindow(QMainWindow): # The window class
         return super().eventFilter(obj, event)
 
     def reinit(self): # REINITIALIZATION!!! Brings everything to zero and reads a new file.
-        self.sortDown = True # always sort descending by default
-        self.lastIndex = 0 # last selected column, 0 is default
         self.clearsearch() # clears the search variables
         self.tables.setCurrentIndex(0)
         self.lineBox.clear()
@@ -204,22 +202,6 @@ class LogWindow(QMainWindow): # The window class
         self.toplabel_set("Click a header to sort.", self.tableBox) # its a label alright
         self.setWindowTitle("pyLogViewer " + self.version + " - " + self.filepath) # window name
 
-    def tablesort(self, logicalIndex, table): # sorts the selected column when... a column header is selected.
-        self.toplabel_set("Sorting...", table) # loading message you know the drill by now
-        QApplication.setOverrideCursor(Qt.WaitCursor) # loading cursor.
-        headerTxt = table.horizontalHeaderItem(logicalIndex).text() # the header text to show later
-        if(logicalIndex != self.lastIndex): # checks if this index is the same as the last one sorted
-            self.sortDown = True # if not, it will always start sorted descending
-            self.lastIndex = logicalIndex # sets the last index to this one
-        else: # if so, it will sort the opposite of last time
-            self.sortDown = not self.sortDown # yeah. inversion
-        
-        table.sortItems(logicalIndex, self.sortDown) # sorts the items at specified index
-        self.toplabel_set("Sorting " + headerTxt + (" descending" if self.sortDown else " ascending"), table) # tells user how its sorted
-
-        self.clearsearch() # clears the search variables, they will be incorrect otherwise
-        QApplication.restoreOverrideCursor() # no more loading cursor.
-
     def toplabel_set(self, action, table): # sets the top label to all sorts of things.
         if(table == -1): # -1 replaces the table in some instances to avoid displaying row count
             self.label.setText("Rows: N/A\n" + action) # yeah.
@@ -227,11 +209,11 @@ class LogWindow(QMainWindow): # The window class
             self.label.setText("Rows: " + f"{self.tableBox.rowCount():,}" + "\n" + action) # it's just the row count !
         app.processEvents() # this just makes the application display actively update so the user knows it isn't dead
 
-    def fixup_date(self, date, type): # formats the dates in either date1 or date2 to be uniform and sortable! ADD THIS TO MAIN LOOP.
+    def fixup_date(self, date, type): # formats the dates in either date1 or date2 to be uniform and sortable!
         month = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] # those are all of the months, if you didn't know
         
         for i in range(len(month)): # goes through said all of the months
-            date = date.replace(month[i], str(i + 1).zfill(2)) # replaces months with numbers when it finds them. this actually isn't too efficient.. RESEARCH other ways
+            date = date.replace(month[i], str(i + 1).zfill(2)) # replaces months with numbers when it finds them.
         if(type == 1): # date1 is already formatted well
             return(date[2:]) # returns the string from third digit of year.
         if(type == 2): # date2 is messed up and must be rearranged.
@@ -259,6 +241,7 @@ class LogWindow(QMainWindow): # The window class
         self.tableBox.setRowCount(len(data))
         self.tableBox.setHorizontalHeaderLabels(["New Date", "Old Date", "Process Variable", "New", "Old", "Min", "Max", "User", "Computer", "IP Address"])
         self.tableBox.setUpdatesEnabled(False)
+        self.tableBox.setSortingEnabled(False)
         maxline = self.maxlineBox.value()
         if(maxline == 0):
             maxline = len(data)
@@ -299,15 +282,17 @@ class LogWindow(QMainWindow): # The window class
             self.tableBox.setItem(a, 8, QTableWidgetItem(data[a][4]))
             self.tableBox.setItem(a, 9, QTableWidgetItem(data[a][0]))
 
-
             a += 1
             if(a >= maxline):
                 break
 
         self.tableBox.setRowCount(len(data) if len(data) < maxline else maxline)
+        del data
         self.tableBox.resizeColumnsToContents()
         self.tableBox.setUpdatesEnabled(True)
-        del data
+        self.tableBox.setSortingEnabled(True)
+        self.tableBox.sortByColumn(0, 1)
+        
         QApplication.restoreOverrideCursor()
         return("Fileread done.")
 # end of LogWindow class.
@@ -317,8 +302,6 @@ window = LogWindow() # the entire class which was created above
 window.show()
 app.exec()
 
-#TODO: Make the linebox get used instead of the tablebox after searching.
-#TODO: Reorganize the rows, remove week day.
 #TODO: Add timer functionality.
 #TODO: Options menu for extra configuration.
 #TODO: Config file to save default log file and other options.
