@@ -30,8 +30,6 @@ class LogWindow(QMainWindow): # The window class
         self.timer.timeout.connect(self.fileRead)
         self.timer.timeout.connect(self.clearsearch)
         self.refreshBox.valueChanged.connect(lambda : self.timer.setInterval(self.refreshBox.value() * 1000))
-        print(self.timer.interval())
-
 
         self.maxLabel = QLabel("Max Rows:")
         self.maxlineBox = QSpinBox() # editable line, contains search value
@@ -236,7 +234,6 @@ class LogWindow(QMainWindow): # The window class
             return(date[0][2] + "-" + date[0][1] + "-" + date[0][0] + " " + date[1]) # rearranges the date and time to be sortable and in line with date1
 
     def fileRead(self): # this goes through the txt file, removes all blank lines and returns it as a 2D list.
-        print("filereading...")
         self.toplabel_set("Parsing file...", -1)
         QApplication.setOverrideCursor(Qt.WaitCursor)
 
@@ -245,7 +242,6 @@ class LogWindow(QMainWindow): # The window class
                     data = logfile.read()
                     data = data.split("\n") # removes blanks between lines and splits each value into one list.
         except:
-            print("FILE NOT FOUND.")
             self.toplabel_set("Filepath not found.", -1)
             QApplication.restoreOverrideCursor()
             return -1
