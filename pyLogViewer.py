@@ -11,11 +11,13 @@ class LogWindow(QMainWindow): # The window class
 
         # misc variables
         self.filepath = "data.txt"
-        self.version = "v0.6.4"
+        self.version = "v0.6.5"
         self.setWindowTitle("pyLogViewer " + self.version + " - " + self.filepath)
         self.searchlist = -1 # contains items which match current search
         self.lastsearch = -1 # the last search, as a string. used for comparison to current search
         self.searchindex = -1 # which position in the searchlist the user is at
+        self.sortDown = True # direction column is sorted
+        self.lastColumn = 0 # column being sorted
 
         # widgets
         self.label = QLabel("Initializing...")
@@ -46,13 +48,11 @@ class LogWindow(QMainWindow): # The window class
         self.tableBox = QTableWidget() # table, contains and shows data
         self.tableBox.setEditTriggers(QTableWidget.NoEditTriggers) # prevents editing of table items
         self.fileRead() # sorts the data and passes it to tablebox
-        self.tableBox.setSortingEnabled(True)
-        self.tableBox.horizontalHeader().sectionClicked.connect(self.clearsearch) # allows for sorting via header click
+        self.tableBox.horizontalHeader().sectionClicked.connect(lambda logicalindex: self.tablesort(logicalindex)) # clears search + saves lastsort
 
         self.lineBox = QTableWidget() # contains every line with a matching search item. takes longer, but faster than highlighting.
         self.lineBox.setEditTriggers(QTableWidget.NoEditTriggers) # prevents editing of table items
-        self.lineBox.setSortingEnabled(True)
-        self.lineBox.horizontalHeader().sectionClicked.connect(self.clearsearch) # allows for sorting via header click
+        self.lineBox.horizontalHeader().sectionClicked.connect(lambda logicalindex: self.tablesort(logicalindex)) # clears search + saves lastsort
 
         self.timer.timeout.connect(lambda : self.toplabel_set("File refreshed.", self.tableBox if self.tables.currentIndex() == 0 else self.lineBox))
 
@@ -106,6 +106,20 @@ class LogWindow(QMainWindow): # The window class
 
         if(self.timer.interval() > 0):
             self.timer.start()
+
+    def tablesort(self, logicalIndex): # sorts the selected column when... a column header is selected.
+        table = self.tableBox if self.tables.currentIndex() == 0 else self.lineBox
+        headerTxt = table.horizontalHeaderItem(logicalIndex).text() # the header text to show later
+
+        if(logicalIndex != self.lastColumn): # checks if this index is the same as the last one sorted
+            self.sortDown = True # if not, it will always start sorted descending
+            self.lastColumn = logicalIndex # sets the last index to this one
+        else: # if so, it will sort the opposite of last time
+            self.sortDown = not self.sortDown # yeah. inversion
+
+        table.sortByColumn(logicalIndex, self.sortDown)
+        self.toplabel_set("Sorting " + headerTxt + (" descending" if self.sortDown else " ascending"), table) # tells user how its sorted
+        self.clearsearch() # clears the search variables, they will be incorrect otherwise
 
     def clearsearch(self): # clears the search variables. prevents issues and forces next search to occur
         self.searchlist = -1
@@ -251,7 +265,6 @@ class LogWindow(QMainWindow): # The window class
         self.tableBox.setRowCount(len(data))
         self.tableBox.setHorizontalHeaderLabels(["New Date", "Old Date", "Process Variable", "New", "Old", "Min", "Max", "User", "Computer", "IP Address"])
         self.tableBox.setUpdatesEnabled(False)
-        self.tableBox.setSortingEnabled(False)
         maxline = self.maxlineBox.value()
         if(maxline == 0):
             maxline = len(data)
@@ -310,8 +323,7 @@ class LogWindow(QMainWindow): # The window class
         del data
         self.tableBox.resizeColumnsToContents()
         self.tableBox.setUpdatesEnabled(True)
-        self.tableBox.setSortingEnabled(True)
-        self.tableBox.sortByColumn(0, 1)
+        self.tableBox.sortByColumn(self.lastColumn, int(self.sortDown))
         
         QApplication.restoreOverrideCursor()
         return("Fileread done.")
@@ -322,7 +334,6 @@ window = LogWindow() # the entire class which was created above
 window.show()
 app.exec()
 
-#TODO: Keep sort through refreshes.
+#TODO: Keep sort through searches (Ex. if the line list is still visible). Make it so it persists through sorts.
 #TODO: Options menu for extra configuration.
 #TODO: Config file to save default log file and other options.
-#TODO: Default sort by new date.
