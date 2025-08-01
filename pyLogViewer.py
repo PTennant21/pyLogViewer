@@ -1,6 +1,6 @@
-import sys, time # imports system and time modules
+import sys # imports system module
 from PyQt5 import QtCore # imports qtcore module
-from PyQt5.QtCore import QSize, Qt # imports qsize and qt classes
+from PyQt5.QtCore import QSize, Qt, QTimer # imports qsize and qt classes
 from PyQt5.QtWidgets import (QApplication, QSpinBox, QCheckBox, QFileDialog, QMainWindow, QPushButton,
                              QLabel, QTableWidget, QTableWidgetItem, QLineEdit, QVBoxLayout, QHBoxLayout,
                              QStackedLayout, QWidget) # imports.. a lot of widget classes
@@ -11,7 +11,7 @@ class LogWindow(QMainWindow): # The window class
 
         # misc variables
         self.filepath = "data.txt"
-        self.version = "v0.6.2"
+        self.version = "v0.6.3"
         self.setWindowTitle("pyLogViewer " + self.version + " - " + self.filepath)
         self.searchlist = -1 # contains items which match current search
         self.lastsearch = -1 # the last search, as a string. used for comparison to current search
@@ -22,13 +22,22 @@ class LogWindow(QMainWindow): # The window class
 
         self.refreshLabel = QLabel("Refresh:")
         self.refreshBox = QSpinBox() # editable line, contains search value
+        self.refreshBox.setValue(10)
         self.refreshBox.setToolTip("Amount of seconds until the list is automatically refreshed.")
+
+        self.timer = QTimer()
+        self.timer.setInterval(self.refreshBox.value() * 1000)
+        self.timer.timeout.connect(self.fileRead)
+        self.timer.timeout.connect(self.clearsearch)
+        self.refreshBox.valueChanged.connect(lambda : self.timer.setInterval(self.refreshBox.value() * 1000))
+        print(self.timer.interval())
+
 
         self.maxLabel = QLabel("Max Rows:")
         self.maxlineBox = QSpinBox() # editable line, contains search value
         self.maxlineBox.setMaximum(1000000)
-        self.maxlineBox.setSingleStep(10000)
-        self.maxlineBox.setValue(150000) # maximum amount of lines to read
+        self.maxlineBox.setSingleStep(1000)
+        self.maxlineBox.setValue(10000) # maximum amount of lines to read
         self.maxlineBox.setGroupSeparatorShown(True)
         self.maxlineBox.setToolTip("Maximum amount of lines to read from the file.")
 
@@ -46,6 +55,8 @@ class LogWindow(QMainWindow): # The window class
         self.lineBox.setEditTriggers(QTableWidget.NoEditTriggers) # prevents editing of table items
         self.lineBox.setSortingEnabled(True)
         self.lineBox.horizontalHeader().sectionClicked.connect(self.clearsearch) # allows for sorting via header click
+
+        self.timer.timeout.connect(lambda : self.toplabel_set("File refreshed.", self.tableBox if self.tables.currentIndex() == 0 else self.lineBox))
 
         self.inputBox = QLineEdit() # editable line, contains search value
         self.inputBox.installEventFilter(self) # checks for enter presses
@@ -94,6 +105,9 @@ class LogWindow(QMainWindow): # The window class
 
         self.setCentralWidget(self.container) # makes the container the central widget
         self.toplabel_set("Click a header to sort, or use the box to search.", self.tableBox) # display after everything is done loading.
+
+        if(self.timer.interval() > 0):
+            self.timer.start()
 
     def clearsearch(self): # clears the search variables. prevents issues and forces next search to occur
         self.searchlist = -1
@@ -206,7 +220,7 @@ class LogWindow(QMainWindow): # The window class
         if(table == -1): # -1 replaces the table in some instances to avoid displaying row count
             self.label.setText("Rows: N/A\n" + action) # yeah.
         else: # otherwise
-            self.label.setText("Rows: " + f"{self.tableBox.rowCount():,}" + "\n" + action) # it's just the row count !
+            self.label.setText("Rows: " + f"{table.rowCount():,}" + "\n" + action) # it's just the row count !
         app.processEvents() # this just makes the application display actively update so the user knows it isn't dead
 
     def fixup_date(self, date, type): # formats the dates in either date1 or date2 to be uniform and sortable!
@@ -222,7 +236,7 @@ class LogWindow(QMainWindow): # The window class
             return(date[0][2] + "-" + date[0][1] + "-" + date[0][0] + " " + date[1]) # rearranges the date and time to be sortable and in line with date1
 
     def fileRead(self): # this goes through the txt file, removes all blank lines and returns it as a 2D list.
-
+        print("filereading...")
         self.toplabel_set("Parsing file...", -1)
         QApplication.setOverrideCursor(Qt.WaitCursor)
 
@@ -312,7 +326,7 @@ window = LogWindow() # the entire class which was created above
 window.show()
 app.exec()
 
-#TODO: Add timer functionality.
+#TODO: Keep sort through refreshes.
 #TODO: Options menu for extra configuration.
 #TODO: Config file to save default log file and other options.
 #TODO: Default sort by new date.
