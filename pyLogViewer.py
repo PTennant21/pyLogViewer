@@ -31,7 +31,9 @@ class LogWindow(QMainWindow): # The window class
         self.timer.setInterval(self.refreshBox.value() * 1000)
         self.timer.timeout.connect(self.fileRead)
         self.timer.timeout.connect(self.clearsearch)
+        self.timer.timeout.connect(lambda : self.searchtable(0))
         self.refreshBox.valueChanged.connect(lambda : self.timer.setInterval(self.refreshBox.value() * 1000))
+        self.refreshBox.valueChanged.connect(self.timerStop) # prevent timer from running constantly at 0
 
         self.maxLabel = QLabel("Max Rows:")
         self.maxlineBox = QSpinBox() # editable line, contains search value
@@ -105,6 +107,12 @@ class LogWindow(QMainWindow): # The window class
         self.toplabel_set("Click a header to sort, or use the box to search.", self.tableBox) # display after everything is done loading.
 
         if(self.timer.interval() > 0):
+            self.timer.start()
+
+    def timerStop(self):
+        if(self.refreshBox.value() == 0):
+            self.timer.stop()
+        elif(not self.timer.isActive()):
             self.timer.start()
 
     def tablesort(self, logicalIndex): # sorts the selected column when... a column header is selected.
@@ -293,7 +301,7 @@ class LogWindow(QMainWindow): # The window class
             self.tableBox.setItem(a, 2, QTableWidgetItem(data[a][6]))
 
             self.tableBox.setItem(a, 3, QTableWidgetItem())
-            try: # only adds numeric portion so sorting works correctly.
+            try: # attempts to add value as number so sorting works properly.
                 self.tableBox.item(a, 3).setData(Qt.ItemDataRole.EditRole, float(data[a][7][data[a][7].find("=") + 1:]))
             except:
                 self.tableBox.item(a, 3).setText(data[a][7][data[a][7].find("=") + 1:])
@@ -308,8 +316,17 @@ class LogWindow(QMainWindow): # The window class
                 self.tableBox.setItem(a, 5, QTableWidgetItem("N/A"))
                 self.tableBox.setItem(a, 6, QTableWidgetItem("N/A"))
             else:
-                self.tableBox.setItem(a, 5, QTableWidgetItem(data[a][9]))
-                self.tableBox.setItem(a, 6, QTableWidgetItem(data[a][10]))
+                self.tableBox.setItem(a, 5, QTableWidgetItem())
+                try:
+                    self.tableBox.item(a, 5).setData(Qt.ItemDataRole.EditRole, float(data[a][9][data[a][9].find("=") + 1:]))
+                except:
+                    self.tableBox.item(a, 5).setText(data[a][9][data[a][9].find("=") + 1:])
+
+                self.tableBox.setItem(a, 6, QTableWidgetItem())
+                try:
+                    self.tableBox.item(a, 6).setData(Qt.ItemDataRole.EditRole, float(data[a][10][data[a][10].find("=") + 1:]))
+                except:
+                    self.tableBox.item(a, 6).setText(data[a][10][data[a][10].find("=") + 1:])
 
             self.tableBox.setItem(a, 7, QTableWidgetItem(data[a][5]))
             self.tableBox.setItem(a, 8, QTableWidgetItem(data[a][4]))
