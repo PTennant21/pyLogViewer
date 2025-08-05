@@ -5,19 +5,89 @@ from PyQt5.QtWidgets import (QApplication, QSpinBox, QCheckBox, QFileDialog, QMa
                              QLabel, QTableWidget, QTableWidgetItem, QLineEdit, QVBoxLayout, QHBoxLayout,
                              QStackedLayout, QWidget) # imports.. a lot of widget classes
 
+class OptionWindow(QWidget):
+    def __init__(self, dfile, maxline, refresh, caps):
+        super().__init__()
+
+        self.setWindowTitle("Settings")
+
+        self.dfile = dfile
+        self.maxline = maxline
+        self.refresh = refresh
+        self.caps = caps
+
+        maxLabel = QLabel("Max Rows:")
+        maxlineBox = QSpinBox() # editable line, contains search value
+        maxlineBox.setMaximum(1000000)
+        maxlineBox.setSingleStep(1000)
+        maxlineBox.setValue(10000) # maximum amount of lines to read
+        maxlineBox.setGroupSeparatorShown(True)
+        maxlineBox.setValue(self.maxline)
+        maxlineBox.setToolTip("Maximum amount of lines to read. Press enter to re-read.")
+
+        refreshLabel = QLabel("Refresh:")
+        refreshBox = QSpinBox() # editable line, contains search value
+        refreshBox.setValue(self.refresh)
+        #self.refreshBox.installEventFilter(self)
+        refreshBox.setToolTip("Amount of seconds until the list is refreshed. Press enter to refresh.")
+
+        self.fileLabel = QLabel("Default file: " + self.dfile)
+        buttonFile = QPushButton("Choose File...")
+        buttonFile.clicked.connect(self.filePick) # opens a file prompt when the button is clicked
+        buttonFile.setToolTip("Choose a file to load on startup.")
+
+        caseCheck = QCheckBox("Case sensitive searching?")
+        caseCheck.setToolTip("Set the default case sensitivity for searching.")
+
+        buttonApply = QPushButton("Save Settings")
+        #self.buttonFile.clicked.connect(self.filePrompt) # opens a file prompt when the button is clicked
+        buttonApply.setToolTip("Apply and save changes.")
+
+        self.setMinimumSize(QSize(300, 100))
+        #self.resize(200, 150)
+
+        top = QHBoxLayout()
+        top.addWidget(refreshLabel)
+        top.addWidget(refreshBox)
+        top.addWidget(maxLabel)
+        top.addWidget(maxlineBox)
+
+        mid = QHBoxLayout()
+        mid.addWidget(self.fileLabel)
+        mid.addStretch()
+        mid.addWidget(buttonFile)
+
+        layout = QVBoxLayout()
+        layout.addLayout(top)
+        layout.addLayout(mid)
+        layout.addWidget(caseCheck)
+        layout.addWidget(buttonApply)
+        self.setLayout(layout)
+
+    def filePick(self): # prompts user for a file using QFileDialog class
+        prompt = QFileDialog(self) # init var with class
+        prompt.setFileMode(QFileDialog.FileMode.ExistingFile) # open existing file
+        prompt.setViewMode(QFileDialog.ViewMode.Detail) # shows greater detail in explorer
+        self.dfile = prompt.getOpenFileName(self, "Select a file.", None, "Log Files (*.log);;Text Files (*.txt);;All Files (*)",)[0]
+        self.fileLabel.setText("Default file: " + self.dfile)
+
+    
+
 class LogWindow(QMainWindow): # The window class
     def __init__(self): # initializes class values
         super().__init__() # initializes it with mainwindow
 
         # misc variables
-        self.filepath = "data.txt"
-        self.version = "v0.7.0"
+        self.defaultpath = "epics.log" # READ THIS FROM INI AT BEGINNING
+        self.filepath = self.defaultpath
+        self.version = "v0.8.0"
         self.setWindowTitle("pyLogViewer " + self.version + " - " + self.filepath)
         self.searchlist = -1 # contains items which match current search
         self.lastsearch = -1 # the last search, as a string. used for comparison to current search
         self.searchindex = -1 # which position in the searchlist the user is at
         self.sortDown = True # direction column is sorted
         self.lastColumn = 0 # column being sorted
+        self.option = None
 
         # widgets
         self.label = QLabel("Initializing...")
@@ -48,6 +118,10 @@ class LogWindow(QMainWindow): # The window class
         self.buttonFile = QPushButton("Open File")
         self.buttonFile.clicked.connect(self.filePrompt) # opens a file prompt when the button is clicked
         self.buttonFile.setToolTip("Import data from a new file.")
+
+        self.buttonOption = QPushButton("Options")
+        self.buttonOption.clicked.connect(self.optionWindow) # opens an option window when the button is clicked
+        self.buttonOption.setToolTip("Miscellaneous settings.")
 
         self.tableBox = QTableWidget() # table, contains and shows data
         self.tableBox.setEditTriggers(QTableWidget.NoEditTriggers) # prevents editing of table items
@@ -85,7 +159,7 @@ class LogWindow(QMainWindow): # The window class
         self.topbar.insertWidget(4, self.maxlineBox)
         self.topbar.insertWidget(5, self.refreshLabel)
         self.topbar.insertWidget(6, self.refreshBox)
-        self.topbar.insertWidget(7, self.buttonFile)
+        self.topbar.insertWidget(7, self.buttonOption)
 
         self.tables = QStackedLayout()
         self.tables.addWidget(self.tableBox)
@@ -110,6 +184,17 @@ class LogWindow(QMainWindow): # The window class
 
         if(self.timer.interval() > 0):
             self.timer.start()
+
+    def optionWindow(self):
+        self.option = OptionWindow(self.defaultpath, self.maxlineBox.value(), self.refreshBox.value(), self.caseCheck.isChecked())
+        self.option.show()
+        #self.option.path = self.filepath
+        #print(self.option.path)
+
+        with open("options.ini", "w") as file: # structure: path / maxline / refresh / caps
+            file.write(self.option.dfile + "\n" + str(self.option.maxline) + "\n" + str(self.option.refresh) + "\n" + str(self.option.caps))
+
+        print("options written")
 
     def timerStop(self):
         if(self.refreshBox.value() == 0):
@@ -362,3 +447,4 @@ app.exec()
 #TODO: Keep sort through searches (Ex. if the line list is still visible). Make it so it persists through sorts.
 #TODO: Options menu for extra configuration.
 #TODO: Config file to save default log file and other options.
+#TODO: Make it so the saved values are loaded from the INI instead of from the widgets, as the mainwindow widgets will be removed.
