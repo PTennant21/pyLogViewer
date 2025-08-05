@@ -11,7 +11,7 @@ class LogWindow(QMainWindow): # The window class
 
         # misc variables
         self.filepath = "data.txt"
-        self.version = "v0.6.5"
+        self.version = "v0.7.0"
         self.setWindowTitle("pyLogViewer " + self.version + " - " + self.filepath)
         self.searchlist = -1 # contains items which match current search
         self.lastsearch = -1 # the last search, as a string. used for comparison to current search
