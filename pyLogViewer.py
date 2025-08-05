@@ -24,8 +24,9 @@ class LogWindow(QMainWindow): # The window class
 
         self.refreshLabel = QLabel("Refresh:")
         self.refreshBox = QSpinBox() # editable line, contains search value
-        self.refreshBox.setValue(10)
-        self.refreshBox.setToolTip("Amount of seconds until the list is automatically refreshed.")
+        self.refreshBox.setValue(0)
+        self.refreshBox.installEventFilter(self)
+        self.refreshBox.setToolTip("Amount of seconds until the list is refreshed. Press enter to refresh.")
 
         self.timer = QTimer()
         self.timer.setInterval(self.refreshBox.value() * 1000)
@@ -41,7 +42,8 @@ class LogWindow(QMainWindow): # The window class
         self.maxlineBox.setSingleStep(1000)
         self.maxlineBox.setValue(10000) # maximum amount of lines to read
         self.maxlineBox.setGroupSeparatorShown(True)
-        self.maxlineBox.setToolTip("Maximum amount of lines to read from the file.")
+        self.maxlineBox.installEventFilter(self)
+        self.maxlineBox.setToolTip("Maximum amount of lines to read. Press enter to re-read.")
 
         self.buttonFile = QPushButton("Open File")
         self.buttonFile.clicked.connect(self.filePrompt) # opens a file prompt when the button is clicked
@@ -214,9 +216,15 @@ class LogWindow(QMainWindow): # The window class
             self.reinit() # reload the file and reinitialize nearly everything
 
     def eventFilter(self, obj, event): # checks if key enter has been pressed when inputbox is in focus. these vars are in the class already
-        if event.type() == QtCore.QEvent.KeyPress and obj is self.inputBox: # if there is a key press event...
-            if event.key() == QtCore.Qt.Key_Return and self.inputBox.hasFocus(): # and the pressed key is return... and the input box is in focus...
-                self.searchtable(1) # then SEARCH the table! pressing enter with the box goes forwards.
+        if event.type() == QtCore.QEvent.KeyPress: # if there is a key press event...
+            if(event.key() == QtCore.Qt.Key_Return and obj.hasFocus()): # and enter was pressed... and the current object is in focus...
+                if(obj is self.inputBox): # and the object is inputbox...
+                    self.searchtable(1) # then SEARCH the table! pressing enter with the box goes forwards.
+                if(obj is self.maxlineBox or obj is self.refreshBox): # and the object is maxlinebox or refreshbox...
+                    self.fileRead()
+                    self.clearsearch()
+                    self.searchtable(0)
+
         return super().eventFilter(obj, event)
 
     def reinit(self): # REINITIALIZATION!!! Brings everything to zero and reads a new file.
