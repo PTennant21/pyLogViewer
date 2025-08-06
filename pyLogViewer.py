@@ -78,7 +78,6 @@ class OptionWindow(QWidget):
     def saveChanges(self): # saves the changes to the ini file
         with open("options.ini", "w") as ini: # writes ini. structure: file to open / maxlines / refreshseconds
             ini.write(self.filepath + "\n" + str(self.maxlineBox.value()) + "\n" + str(self.refreshBox.value()))
-        print("options written")
 
     def applyChanges(self, main): # applies the changes to the main window
         reload = False
@@ -99,8 +98,6 @@ class OptionWindow(QWidget):
             main.timer.setInterval(main.refresh * 1000)
             main.timerStop() # prevent timer from running constantly at 0
 
-        print("changes applied")
-
 class LogWindow(QMainWindow): # The window class
     def __init__(self): # initializes class values
         super().__init__() # initializes it with mainwindow
@@ -109,7 +106,6 @@ class LogWindow(QMainWindow): # The window class
             with(open("options.ini", 'r')) as ini:
                     options = ini.read()
                     options = options.split("\n") # file to open / maxlines / refreshseconds
-                    print(options)
         except:
             options = "test.log", "1000", "0"
 
