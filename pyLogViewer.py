@@ -6,81 +6,119 @@ from PyQt5.QtWidgets import (QApplication, QSpinBox, QCheckBox, QFileDialog, QMa
                              QStackedLayout, QWidget) # imports.. a lot of widget classes
 
 class OptionWindow(QWidget):
-    def __init__(self, dfile, maxline, refresh, caps):
+    def __init__(self, main):
         super().__init__()
 
         self.setWindowTitle("Settings")
 
-        self.dfile = dfile
-        self.maxline = maxline
-        self.refresh = refresh
-        self.caps = caps
+        self.filepath = main.filepath
+        self.maxLine = main.maxLine
+        self.refresh = main.refresh
 
         maxLabel = QLabel("Max Rows:")
-        maxlineBox = QSpinBox() # editable line, contains search value
-        maxlineBox.setMaximum(1000000)
-        maxlineBox.setSingleStep(1000)
-        maxlineBox.setValue(10000) # maximum amount of lines to read
-        maxlineBox.setGroupSeparatorShown(True)
-        maxlineBox.setValue(self.maxline)
-        maxlineBox.setToolTip("Maximum amount of lines to read. Press enter to re-read.")
+        self.maxlineBox = QSpinBox() # editable line, contains search value
+        self.maxlineBox.setMaximum(1000000)
+        self.maxlineBox.setSingleStep(100)
+        self.maxlineBox.setGroupSeparatorShown(True)
+        self.maxlineBox.setValue(self.maxLine)
+        self.maxlineBox.setToolTip("Maximum amount of lines to read. Press enter to re-read.")
 
         refreshLabel = QLabel("Refresh:")
-        refreshBox = QSpinBox() # editable line, contains search value
-        refreshBox.setValue(self.refresh)
-        #self.refreshBox.installEventFilter(self)
-        refreshBox.setToolTip("Amount of seconds until the list is refreshed. Press enter to refresh.")
+        self.refreshBox = QSpinBox() # editable line, contains search value
+        self.refreshBox.setMaximum(86400)
+        self.refreshBox.setSingleStep(5)
+        self.refreshBox.setGroupSeparatorShown(True)
+        self.refreshBox.setValue(self.refresh)
+        self.refreshBox.setToolTip("Amount of seconds until the list is refreshed. Press enter to refresh.")
 
-        self.fileLabel = QLabel("Default file: " + self.dfile)
+        self.fileLabel = QLabel("Log file: " + self.filepath)
         buttonFile = QPushButton("Choose File...")
         buttonFile.clicked.connect(self.filePick) # opens a file prompt when the button is clicked
-        buttonFile.setToolTip("Choose a file to load on startup.")
+        buttonFile.setToolTip("Choose a file to load. Saved file is automatically loaded.")
 
-        caseCheck = QCheckBox("Case sensitive searching?")
-        caseCheck.setToolTip("Set the default case sensitivity for searching.")
+        buttonApply = QPushButton("Apply Changes") # applies current settings, doesn't save.
+        buttonApply.clicked.connect(lambda : self.applyChanges(main)) # applies changes to window
+        buttonApply.setToolTip("Apply changes.")
 
-        buttonApply = QPushButton("Save Settings")
-        #self.buttonFile.clicked.connect(self.filePrompt) # opens a file prompt when the button is clicked
-        buttonApply.setToolTip("Apply and save changes.")
+        buttonSave = QPushButton("Save Changes") # saves current settings, doesn't apply.
+        buttonSave.clicked.connect(self.saveChanges) # saves changes to ini
+        buttonSave.setToolTip("Apply and save changes.")
 
-        self.setMinimumSize(QSize(300, 100))
-        #self.resize(200, 150)
+        self.setMinimumSize(QSize(300, 125))
+        self.resize(350, 200)
 
         top = QHBoxLayout()
         top.addWidget(refreshLabel)
-        top.addWidget(refreshBox)
+        top.addWidget(self.refreshBox)
+        top.addStretch()
         top.addWidget(maxLabel)
-        top.addWidget(maxlineBox)
+        top.addWidget(self.maxlineBox)
 
-        mid = QHBoxLayout()
-        mid.addWidget(self.fileLabel)
-        mid.addStretch()
-        mid.addWidget(buttonFile)
+        bottom = QHBoxLayout()
+        bottom.addWidget(buttonApply)
+        bottom.addWidget(buttonSave)
 
         layout = QVBoxLayout()
+        layout.addStretch()
         layout.addLayout(top)
-        layout.addLayout(mid)
-        layout.addWidget(caseCheck)
-        layout.addWidget(buttonApply)
+        layout.addStretch()
+        layout.addWidget(self.fileLabel)
+        layout.addWidget(buttonFile)
+        layout.addStretch()
+        layout.addLayout(bottom)
         self.setLayout(layout)
 
     def filePick(self): # prompts user for a file using QFileDialog class
         prompt = QFileDialog(self) # init var with class
         prompt.setFileMode(QFileDialog.FileMode.ExistingFile) # open existing file
         prompt.setViewMode(QFileDialog.ViewMode.Detail) # shows greater detail in explorer
-        self.dfile = prompt.getOpenFileName(self, "Select a file.", None, "Log Files (*.log);;Text Files (*.txt);;All Files (*)",)[0]
-        self.fileLabel.setText("Default file: " + self.dfile)
+        self.filepath = prompt.getOpenFileName(self, "Select a file.", None, "Log Files (*.log);;Text Files (*.txt);;All Files (*)",)[0]
+        self.fileLabel.setText("Log file: " + self.filepath)
 
+    def saveChanges(self): # saves the changes to the ini file
+        with open("options.ini", "w") as ini: # writes ini. structure: file to open / maxlines / refreshseconds
+            ini.write(self.filepath + "\n" + str(self.maxlineBox.value()) + "\n" + str(self.refreshBox.value()))
+        print("options written")
+
+    def applyChanges(self, main): # applies the changes to the main window
+        reload = False
+
+        if(main.maxLine != self.maxlineBox.value()):
+            main.maxLine = self.maxlineBox.value()
+            reload = True
     
+        if(main.filepath != self.filepath):
+            main.filepath = self.filepath
+            reload = True
+
+        if(reload):
+            main.reinit()
+
+        if(main.refresh != self.refreshBox.value()):
+            main.refresh = self.refreshBox.value()
+            main.timer.setInterval(main.refresh * 1000)
+            main.timerStop() # prevent timer from running constantly at 0
+
+        print("changes applied")
 
 class LogWindow(QMainWindow): # The window class
     def __init__(self): # initializes class values
         super().__init__() # initializes it with mainwindow
 
+        try: # reads ini if it exists, otherwise sets defaults
+            with(open("options.ini", 'r')) as ini:
+                    options = ini.read()
+                    options = options.split("\n") # file to open / maxlines / refreshseconds
+                    print(options)
+        except:
+            options = "test.log", "1000", "0"
+
         # misc variables
-        self.defaultpath = "epics.log" # READ THIS FROM INI AT BEGINNING
-        self.filepath = self.defaultpath
-        self.version = "v0.8.0"
+        self.filepath = options[0]
+        self.maxLine = int(options[1])
+        self.refresh = int(options[2])
+
+        self.version = "v1.0.0"
         self.setWindowTitle("pyLogViewer " + self.version + " - " + self.filepath)
         self.searchlist = -1 # contains items which match current search
         self.lastsearch = -1 # the last search, as a string. used for comparison to current search
@@ -90,34 +128,14 @@ class LogWindow(QMainWindow): # The window class
         self.option = None
 
         # widgets
+        self.rowlabel = QLabel("Rows: N/A")
         self.label = QLabel("Initializing...")
 
-        self.refreshLabel = QLabel("Refresh:")
-        self.refreshBox = QSpinBox() # editable line, contains search value
-        self.refreshBox.setValue(0)
-        self.refreshBox.installEventFilter(self)
-        self.refreshBox.setToolTip("Amount of seconds until the list is refreshed. Press enter to refresh.")
-
         self.timer = QTimer()
-        self.timer.setInterval(self.refreshBox.value() * 1000)
+        self.timer.setInterval(self.refresh * 1000)
         self.timer.timeout.connect(self.fileRead)
         self.timer.timeout.connect(self.clearsearch)
         self.timer.timeout.connect(lambda : self.searchtable(0))
-        self.refreshBox.valueChanged.connect(lambda : self.timer.setInterval(self.refreshBox.value() * 1000))
-        self.refreshBox.valueChanged.connect(self.timerStop) # prevent timer from running constantly at 0
-
-        self.maxLabel = QLabel("Max Rows:")
-        self.maxlineBox = QSpinBox() # editable line, contains search value
-        self.maxlineBox.setMaximum(1000000)
-        self.maxlineBox.setSingleStep(1000)
-        self.maxlineBox.setValue(10000) # maximum amount of lines to read
-        self.maxlineBox.setGroupSeparatorShown(True)
-        self.maxlineBox.installEventFilter(self)
-        self.maxlineBox.setToolTip("Maximum amount of lines to read. Press enter to re-read.")
-
-        self.buttonFile = QPushButton("Open File")
-        self.buttonFile.clicked.connect(self.filePrompt) # opens a file prompt when the button is clicked
-        self.buttonFile.setToolTip("Import data from a new file.")
 
         self.buttonOption = QPushButton("Options")
         self.buttonOption.clicked.connect(self.optionWindow) # opens an option window when the button is clicked
@@ -153,13 +171,10 @@ class LogWindow(QMainWindow): # The window class
         self.resize(900, 500)
 
         self.topbar = QHBoxLayout()
-        self.topbar.insertWidget(1, self.label)
-        self.topbar.addStretch(2)
-        self.topbar.insertWidget(3, self.maxLabel)
-        self.topbar.insertWidget(4, self.maxlineBox)
-        self.topbar.insertWidget(5, self.refreshLabel)
-        self.topbar.insertWidget(6, self.refreshBox)
-        self.topbar.insertWidget(7, self.buttonOption)
+        self.topbar.insertWidget(1, self.rowlabel)
+        self.topbar.insertWidget(2, self.label)
+        self.topbar.insertStretch(3)
+        self.topbar.insertWidget(4, self.buttonOption)
 
         self.tables = QStackedLayout()
         self.tables.addWidget(self.tableBox)
@@ -186,18 +201,11 @@ class LogWindow(QMainWindow): # The window class
             self.timer.start()
 
     def optionWindow(self):
-        self.option = OptionWindow(self.defaultpath, self.maxlineBox.value(), self.refreshBox.value(), self.caseCheck.isChecked())
+        self.option = OptionWindow(self)
         self.option.show()
-        #self.option.path = self.filepath
-        #print(self.option.path)
-
-        with open("options.ini", "w") as file: # structure: path / maxline / refresh / caps
-            file.write(self.option.dfile + "\n" + str(self.option.maxline) + "\n" + str(self.option.refresh) + "\n" + str(self.option.caps))
-
-        print("options written")
 
     def timerStop(self):
-        if(self.refreshBox.value() == 0):
+        if(self.refresh == 0):
             self.timer.stop()
         elif(not self.timer.isActive()):
             self.timer.start()
@@ -241,7 +249,7 @@ class LogWindow(QMainWindow): # The window class
             if(self.searchindex not in range(len(self.searchlist))):
                 self.searchindex = 0 if dir != -1 else len(self.searchlist) - 1
 
-            self.toplabel_set("Viewing " + f"{self.searchindex + 1:,}" + " of " + f"{len(self.searchlist):,}" + ' results for "' + search + '".', self.lineBox) # result you're viewing out of total
+            self.toplabel_set("Viewing result " + f"{self.searchindex + 1:,}" + ' for "' + search + '".', self.lineBox) # result you're viewing out of total
             self.lineBox.setCurrentCell(self.searchlist[self.searchindex][0], self.searchlist[self.searchindex][1]) # highlight and go to new selection
             return # exit the method.
 
@@ -275,10 +283,9 @@ class LogWindow(QMainWindow): # The window class
             self.tables.setCurrentIndex(1)
             self.lineBox.resizeColumnsToContents()
             self.lineBox.setHorizontalHeaderLabels(["New Date", "Old Date", "Process Variable", "New", "Old", "Min", "Max", "User", "Computer", "IP Address"])
-            #self.tablesort(0, self.lineBox) Might be USELESS if the og table is already sorted.
             self.searchindex = 0 if dir != -1 else len(self.searchlist) - 1
             self.lineBox.setCurrentCell(self.searchlist[0 if dir == 1 else dir][0], self.searchlist[0 if dir == 1 else dir][1]) # go to the first result
-            self.toplabel_set("Viewing " + f"{self.searchindex + 1:,}" + " of " + f"{len(self.searchlist):,}" + ' results for "' + search + '".', self.lineBox)
+            self.toplabel_set("Viewing result " + f"{self.searchindex + 1:,}" + ' for "' + search + '".', self.lineBox)
             self.lastsearch = search
         else:
             self.lineBox.clearSelection() # removes selections in table widget
@@ -290,25 +297,11 @@ class LogWindow(QMainWindow): # The window class
 
 
         QApplication.restoreOverrideCursor()
-                
-    def filePrompt(self): # prompts user for a file using QFileDialog class
-        prompt = QFileDialog(self) # init var with class
-        prompt.setFileMode(QFileDialog.FileMode.ExistingFile) # open existing file
-        prompt.setViewMode(QFileDialog.ViewMode.Detail) # shows greater detail in explorer
-        self.filepath = prompt.getOpenFileName(self, "Select a file.", None, "Log Files (*.log);;Text Files (*.txt);;All Files (*)",)[0] # opens window itself and returns filepath. includes text and supported filetypes.
-        if(self.filepath != ""): # make sure it is actually something
-            self.setWindowTitle("pyLogViewer " + self.version + " - " + self.filepath) # visual filepath indicator
-            self.reinit() # reload the file and reinitialize nearly everything
 
     def eventFilter(self, obj, event): # checks if key enter has been pressed when inputbox is in focus. these vars are in the class already
         if event.type() == QtCore.QEvent.KeyPress: # if there is a key press event...
             if(event.key() == QtCore.Qt.Key_Return and obj.hasFocus()): # and enter was pressed... and the current object is in focus...
-                if(obj is self.inputBox): # and the object is inputbox...
-                    self.searchtable(1) # then SEARCH the table! pressing enter with the box goes forwards.
-                if(obj is self.maxlineBox or obj is self.refreshBox): # and the object is maxlinebox or refreshbox...
-                    self.fileRead()
-                    self.clearsearch()
-                    self.searchtable(0)
+                self.searchtable(1) # then SEARCH the table! pressing enter with the box goes forwards.
 
         return super().eventFilter(obj, event)
 
@@ -331,9 +324,12 @@ class LogWindow(QMainWindow): # The window class
 
     def toplabel_set(self, action, table): # sets the top label to all sorts of things.
         if(table == -1): # -1 replaces the table in some instances to avoid displaying row count
-            self.label.setText("Rows: N/A\n" + action) # yeah.
-        else: # otherwise
-            self.label.setText("Rows: " + f"{table.rowCount():,}" + "\n" + action) # it's just the row count !
+            self.rowlabel.setText("") # yeah.
+        elif(table == self.lineBox): # otherwise
+            self.rowlabel.setText("Showing " + f"{table.rowCount():,}" + " results.")
+        else:
+            self.rowlabel.setText("Showing " + f"{table.rowCount():,}" + " rows.") # it's just the row count !
+        self.label.setText(action) # the action text
         app.processEvents() # this just makes the application display actively update so the user knows it isn't dead
 
     def fixup_date(self, date, type): # formats the dates in either date1 or date2 to be uniform and sortable!
@@ -357,7 +353,7 @@ class LogWindow(QMainWindow): # The window class
                     data = logfile.read()
                     data = data.split("\n") # removes blanks between lines and splits each value into one list.
         except:
-            self.toplabel_set("Filepath not found.", -1)
+            self.toplabel_set("File not found.", -1)
             QApplication.restoreOverrideCursor()
             return -1
         
@@ -366,9 +362,8 @@ class LogWindow(QMainWindow): # The window class
         self.tableBox.setRowCount(len(data))
         self.tableBox.setHorizontalHeaderLabels(["New Date", "Old Date", "Process Variable", "New", "Old", "Min", "Max", "User", "Computer", "IP Address"])
         self.tableBox.setUpdatesEnabled(False)
-        maxline = self.maxlineBox.value()
-        if(maxline == 0):
-            maxline = len(data)
+        maxLine = self.maxLine if self.maxLine != 0 else len(data)
+
         a = 0
 
         self.toplabel_set("Adding data to table...", -1)
@@ -426,10 +421,10 @@ class LogWindow(QMainWindow): # The window class
             self.tableBox.setItem(a, 9, QTableWidgetItem(data[a][0]))
 
             a += 1
-            if(a >= maxline):
+            if(a >= maxLine):
                 break
 
-        self.tableBox.setRowCount(len(data) if len(data) < maxline else maxline)
+        self.tableBox.setRowCount(len(data) if len(data) < maxLine else maxLine)
         del data
         self.tableBox.resizeColumnsToContents()
         self.tableBox.setUpdatesEnabled(True)
@@ -443,8 +438,3 @@ app = QApplication(sys.argv)
 window = LogWindow() # the entire class which was created above
 window.show()
 app.exec()
-
-#TODO: Keep sort through searches (Ex. if the line list is still visible). Make it so it persists through sorts.
-#TODO: Options menu for extra configuration.
-#TODO: Config file to save default log file and other options.
-#TODO: Make it so the saved values are loaded from the INI instead of from the widgets, as the mainwindow widgets will be removed.

@@ -1,0 +1,100 @@
+10.0.152.29:49916 Mon May 05 09:55:03 2025 05-May-25 09:54:54 physics01.nsls2.bnl.local emma SR:C26-FOFB{CC}fdbk:PIDramActive-SP new=1 old=0 min=1 max=1
+10.0.152.30:46944 Mon May 05 09:55:03 2025 05-May-25 09:54:54 physics01.nsls2.bnl.local emma SR:C27-FOFB{CC}fdbk:PIDramActive-SP new=0 old=1 min=0 max=0
+10.0.152.30:46958 Mon May 05 09:55:03 2025 05-May-25 09:54:54 physics01.nsls2.bnl.local emma SR:C28-FOFB{CC}fdbk:PIDramActive-SP new=0 old=1 min=0 max=0
+10.0.152.134:3768 Mon May 05 09:55:03 2025 05-May-25 09:54:54 physics01.nsls2.bnl.local emma SR-BR{FOFB}Evt:StartStop-Cmd.VAL new=1 old=1 min=1 max=1
+10.0.152.25:53906 Mon May 05 09:55:03 2025 05-May-25 09:54:54 physics01.nsls2.bnl.local emma SR:C19-FOFB{CC}fdbk:PIDramActive-SP new=0 old=1 min=0 max=0
+10.0.152.25:53922 Mon May 05 09:55:04 2025 05-May-25 09:54:54 physics01.nsls2.bnl.local emma SR:C20-FOFB{CC}fdbk:PIDramActive-SP new=0 old=1 min=0 max=0
+10.0.153.231:42676 Mon May 05 09:55:17 2025 05-May-25 09:55:13 box64-3.nsls2.bnl.gov peter SR-RF{CFC:D-RAMP}Val:U0-SP new=1500 old=1200
+10.0.153.231:42676 Mon May 05 09:55:22 2025 05-May-25 09:55:15 box64-3.nsls2.bnl.gov peter SR-RF{CFC:D-RAMP}Enbl:Run new=1 old=0
+10.0.153.230:57130 Mon May 05 09:55:40 2025 05-May-25 09:55:35 box64-3.nsls2.bnl.gov peter SR-RF{CFC:C-RAMP}Val:U0-SP new=1500 old=1200
+10.0.153.230:57130 Mon May 05 09:55:45 2025 05-May-25 09:55:37 box64-3.nsls2.bnl.gov peter SR-RF{CFC:C-RAMP}Enbl:Run new=1 old=0
+10.0.153.230:57130 Mon May 05 09:55:50 2025 05-May-25 09:55:47 box64-3.nsls2.bnl.gov peter SR-RF{CFC:C-RAMP}Val:U0-SP new=1400 old=1500
+10.0.153.230:57130 Mon May 05 09:55:55 2025 05-May-25 09:55:48 box64-3.nsls2.bnl.gov peter SR-RF{CFC:C-RAMP}Enbl:Run new=1 old=0
+10.0.153.231:42676 Mon May 05 09:55:57 2025 05-May-25 09:55:55 box64-3.nsls2.bnl.gov peter SR-RF{CFC:D-RAMP}Val:U0-SP new=1400 old=1500
+10.0.153.231:42676 Mon May 05 09:56:02 2025 05-May-25 09:55:57 box64-3.nsls2.bnl.gov peter SR-RF{CFC:D-RAMP}Enbl:Run new=1 old=0
+10.0.153.231:50860 Mon May 05 09:56:32 2025 05-May-25 09:56:26 vdiepicsgw.nsls2.bnl.gov softioc-vdi SR-RF{CFC:D}Gain:P-SP new=0 old=0.02
+10.0.152.17:41292 Mon May 05 09:57:24 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C03-FOFB{CC}Ref_Orb_H-SP new=0 old=0
+10.0.152.17:41292 Mon May 05 09:57:24 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C03-FOFB{CC}Ref_Orb_H-SP new=0 old=0
+10.0.152.17:41292 Mon May 05 09:57:24 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C03-FOFB{CC}Ref_Orb_V-SP new=0 old=0
+10.0.152.20:50700 Mon May 05 09:57:24 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C10-FOFB{CC}Ref_Orb_H-SP new=0 old=0
+10.0.152.20:50700 Mon May 05 09:57:24 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C10-FOFB{CC}Ref_Orb_H-SP new=0 old=0
+10.0.152.20:50700 Mon May 05 09:57:24 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C10-FOFB{CC}Ref_Orb_V-SP new=0 old=0
+10.0.152.20:50714 Mon May 05 09:57:24 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C09-FOFB{CC}Ref_Orb_H-SP new=0 old=0
+10.0.152.20:50714 Mon May 05 09:57:24 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C09-FOFB{CC}Ref_Orb_H-SP new=0 old=0
+10.0.152.20:50714 Mon May 05 09:57:24 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C09-FOFB{CC}Ref_Orb_V-SP new=0 old=0
+10.0.152.20:50714 Mon May 05 09:57:24 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C09-FOFB{CC}Ref_Orb_V-SP new=0 old=0
+10.0.152.20:50714 Mon May 05 09:57:24 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C09-FOFB{CC}Ref_Orb_H-SP new=0 old=0 min=0 max=0
+10.0.152.19:40876 Mon May 05 09:57:24 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C07-FOFB{CC}Ref_Orb_H-SP new=0 old=0
+10.0.152.19:40876 Mon May 05 09:57:24 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C07-FOFB{CC}Ref_Orb_H-SP new=0 old=0
+10.0.152.19:40876 Mon May 05 09:57:24 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C07-FOFB{CC}Ref_Orb_V-SP new=0 old=0
+10.0.152.19:40876 Mon May 05 09:57:24 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C07-FOFB{CC}Ref_Orb_V-SP new=0 old=0
+10.0.152.19:40876 Mon May 05 09:57:24 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C07-FOFB{CC}Ref_Orb_H-SP new=0 old=0 min=0 max=0
+10.0.152.19:40876 Mon May 05 09:57:24 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C07-FOFB{CC}Ref_Orb_V-SP new=0 old=0 min=0 max=0
+10.0.152.19:40876 Mon May 05 09:57:24 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C07-FOFB{CC}Ref_Orb_H-SP new=0 old=0 min=0 max=0
+10.0.152.19:40890 Mon May 05 09:57:24 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C08-FOFB{CC}Ref_Orb_H-SP new=0 old=0
+10.0.152.19:40890 Mon May 05 09:57:24 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C08-FOFB{CC}Ref_Orb_H-SP new=0 old=0
+10.0.152.19:40890 Mon May 05 09:57:24 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C08-FOFB{CC}Ref_Orb_V-SP new=0 old=0
+10.0.152.19:40890 Mon May 05 09:57:24 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C08-FOFB{CC}Ref_Orb_V-SP new=0 old=0
+10.0.152.19:40890 Mon May 05 09:57:24 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C08-FOFB{CC}Ref_Orb_H-SP new=0 old=0 min=0 max=0
+10.0.152.19:40890 Mon May 05 09:57:24 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C08-FOFB{CC}Ref_Orb_V-SP new=0 old=0 min=0 max=0
+10.0.152.19:40890 Mon May 05 09:57:24 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C08-FOFB{CC}Ref_Orb_H-SP new=0 old=0 min=0 max=0
+10.0.152.19:40890 Mon May 05 09:57:24 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C08-FOFB{CC}Ref_Orb_V-SP new=0 old=0 min=0 max=0
+10.0.152.19:40890 Mon May 05 09:57:24 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C08-FOFB{CC}Ref_Orb_H-SP new=0 old=0 min=0 max=0
+10.0.152.91:44442 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C30-FOFB{CC}Ref_Orb_H-SP new=0 old=0
+10.0.152.91:44442 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C30-FOFB{CC}Ref_Orb_H-SP new=0 old=0
+10.0.152.91:44442 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C30-FOFB{CC}Ref_Orb_V-SP new=0 old=0
+10.0.152.91:44442 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C30-FOFB{CC}Ref_Orb_V-SP new=0 old=0
+10.0.152.91:44442 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C30-FOFB{CC}Ref_Orb_H-SP new=0 old=0 min=0 max=0
+10.0.152.91:44442 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C30-FOFB{CC}Ref_Orb_V-SP new=0 old=0 min=0 max=0
+10.0.152.91:44442 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C30-FOFB{CC}Ref_Orb_H-SP new=0 old=0 min=0 max=0
+10.0.152.91:44442 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C30-FOFB{CC}Ref_Orb_V-SP new=0 old=0 min=0 max=0
+10.0.152.91:44442 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C30-FOFB{CC}Ref_Orb_H-SP new=0 old=0 min=0 max=0
+10.0.152.18:43688 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C06-FOFB{CC}Ref_Orb_H-SP new=0 old=0
+10.0.152.18:43688 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C06-FOFB{CC}Ref_Orb_H-SP new=0 old=0
+10.0.152.18:43688 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C06-FOFB{CC}Ref_Orb_V-SP new=0 old=0
+10.0.152.18:43688 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C06-FOFB{CC}Ref_Orb_V-SP new=0 old=0
+10.0.152.18:43688 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C06-FOFB{CC}Ref_Orb_H-SP new=0 old=0 min=0 max=0
+10.0.152.18:43688 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C06-FOFB{CC}Ref_Orb_V-SP new=0 old=0 min=0 max=0
+10.0.152.18:43688 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C06-FOFB{CC}Ref_Orb_H-SP new=0 old=0 min=0 max=0
+10.0.152.18:43688 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C06-FOFB{CC}Ref_Orb_V-SP new=0 old=0 min=0 max=0
+10.0.152.18:43688 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C06-FOFB{CC}Ref_Orb_H-SP new=0 old=0 min=0 max=0
+10.0.152.91:44430 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C29-FOFB{CC}Ref_Orb_H-SP new=0 old=0
+10.0.152.91:44430 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C29-FOFB{CC}Ref_Orb_H-SP new=0 old=0
+10.0.152.91:44430 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C29-FOFB{CC}Ref_Orb_V-SP new=0 old=0
+10.0.152.91:44430 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C29-FOFB{CC}Ref_Orb_V-SP new=0 old=0
+10.0.152.91:44430 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C29-FOFB{CC}Ref_Orb_H-SP new=0 old=0 min=0 max=0
+10.0.152.91:44430 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C29-FOFB{CC}Ref_Orb_V-SP new=0 old=0 min=0 max=0
+10.0.152.91:44430 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C29-FOFB{CC}Ref_Orb_H-SP new=0 old=0 min=0 max=0
+10.0.152.91:44430 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C29-FOFB{CC}Ref_Orb_V-SP new=0 old=0 min=0 max=0
+10.0.152.91:44430 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C29-FOFB{CC}Ref_Orb_H-SP new=0 old=0 min=0 max=0
+10.0.152.18:43730 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C05-FOFB{CC}Ref_Orb_H-SP new=0 old=0
+10.0.152.18:43730 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C05-FOFB{CC}Ref_Orb_H-SP new=0 old=0
+10.0.152.18:43730 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C05-FOFB{CC}Ref_Orb_V-SP new=0 old=0
+10.0.152.18:43730 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C05-FOFB{CC}Ref_Orb_V-SP new=0 old=0
+10.0.152.18:43730 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C05-FOFB{CC}Ref_Orb_H-SP new=0 old=0 min=0 max=0
+10.0.152.18:43730 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C05-FOFB{CC}Ref_Orb_V-SP new=0 old=0 min=0 max=0
+10.0.152.18:43730 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C05-FOFB{CC}Ref_Orb_H-SP new=0 old=0 min=0 max=0
+10.0.152.18:43730 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C05-FOFB{CC}Ref_Orb_V-SP new=0 old=0 min=0 max=0
+10.0.152.18:43730 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C05-FOFB{CC}Ref_Orb_H-SP new=0 old=0 min=0 max=0
+10.0.152.18:43730 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C05-FOFB{CC}Ref_Orb_V-SP new=0 old=0 min=0 max=0
+10.0.152.18:43730 Mon May 05 09:57:25 2025 05-May-25 09:57:25 physics01.nsls2.bnl.local tennp92 SR:C05-FOFB{CC}Ref_Orb_H-SP new=0 old=0 min=0 max=0
+10.0.152.18:43730 Mon May 05 09:57:25 2025 05-May-25 09:57:25 physics01.nsls2.bnl.local tennp92 SR:C05-FOFB{CC}Ref_Orb_V-SP new=0 old=0 min=0 max=0
+10.0.152.18:43730 Mon May 05 09:57:25 2025 05-May-25 09:57:25 physics01.nsls2.bnl.local tennp92 SR:C05-FOFB{CC}Ref_Orb_H-SP new=0 old=0 min=0 max=0
+10.0.152.28:60100 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C24-FOFB{CC}Ref_Orb_H-SP new=0 old=0
+10.0.152.28:60100 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C24-FOFB{CC}Ref_Orb_H-SP new=0 old=0
+10.0.152.28:60100 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C24-FOFB{CC}Ref_Orb_V-SP new=0 old=0
+10.0.152.28:60100 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C24-FOFB{CC}Ref_Orb_V-SP new=0 old=0
+10.0.152.28:60100 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C24-FOFB{CC}Ref_Orb_H-SP new=0 old=0 min=0 max=0
+10.0.152.28:60100 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C24-FOFB{CC}Ref_Orb_V-SP new=0 old=0 min=0 max=0
+10.0.152.28:60100 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C24-FOFB{CC}Ref_Orb_H-SP new=0 old=0 min=0 max=0
+10.0.152.28:60100 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C24-FOFB{CC}Ref_Orb_V-SP new=0 old=0 min=0 max=0
+10.0.152.28:60100 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C24-FOFB{CC}Ref_Orb_H-SP new=0 old=0 min=0 max=0
+10.0.152.28:60100 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C24-FOFB{CC}Ref_Orb_V-SP new=0 old=0 min=0 max=0
+10.0.152.28:60100 Mon May 05 09:57:25 2025 05-May-25 09:57:25 physics01.nsls2.bnl.local tennp92 SR:C24-FOFB{CC}Ref_Orb_H-SP new=0 old=0 min=0 max=0
+10.0.152.28:60100 Mon May 05 09:57:25 2025 05-May-25 09:57:25 physics01.nsls2.bnl.local tennp92 SR:C24-FOFB{CC}Ref_Orb_V-SP new=0 old=0 min=0 max=0
+10.0.152.28:60100 Mon May 05 09:57:25 2025 05-May-25 09:57:25 physics01.nsls2.bnl.local tennp92 SR:C24-FOFB{CC}Ref_Orb_H-SP new=0 old=0 min=0 max=0
+10.0.152.28:60130 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C23-FOFB{CC}Ref_Orb_H-SP new=0 old=0
+10.0.152.28:60130 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C23-FOFB{CC}Ref_Orb_H-SP new=0 old=0
+10.0.152.28:60130 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C23-FOFB{CC}Ref_Orb_V-SP new=0 old=0
+10.0.152.28:60130 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C23-FOFB{CC}Ref_Orb_V-SP new=0 old=0
+10.0.152.28:60130 Mon May 05 09:57:25 2025 05-May-25 09:57:24 physics01.nsls2.bnl.local tennp92 SR:C23-FOFB{CC}Ref_Orb_H-SP new=0 old=0 min=0 max=0
