@@ -22,6 +22,7 @@ class OptionWindow(QWidget):
         self.maxlineBox.setGroupSeparatorShown(True)
         self.maxlineBox.setValue(self.maxLine)
         self.maxlineBox.setToolTip("Maximum amount of lines to read. Press enter to re-read.")
+        self.maxlineBox.valueChanged.connect(lambda : self.maxChange(main))
 
         refreshLabel = QLabel("Refresh:")
         self.refreshBox = QSpinBox() # editable line, contains search value
@@ -30,10 +31,11 @@ class OptionWindow(QWidget):
         self.refreshBox.setGroupSeparatorShown(True)
         self.refreshBox.setValue(self.refresh)
         self.refreshBox.setToolTip("Amount of seconds until the list is refreshed. Press enter to refresh.")
+        self.refreshBox.valueChanged.connect(lambda : self.timerChange(main))
 
         self.fileLabel = QLabel("Log file: " + self.filepath)
         buttonFile = QPushButton("Choose File...")
-        buttonFile.clicked.connect(self.filePick) # opens a file prompt when the button is clicked
+        buttonFile.clicked.connect(lambda : self.filePick(main)) # opens a file prompt when the button is clicked
         buttonFile.setToolTip("Choose a file to load. Saved file is automatically loaded.")
 
         buttonApply = QPushButton("Apply Changes") # applies current settings, doesn't save.
@@ -54,10 +56,6 @@ class OptionWindow(QWidget):
         top.addWidget(maxLabel)
         top.addWidget(self.maxlineBox)
 
-        bottom = QHBoxLayout()
-        bottom.addWidget(buttonApply)
-        bottom.addWidget(buttonSave)
-
         layout = QVBoxLayout()
         layout.addStretch()
         layout.addLayout(top)
@@ -65,38 +63,32 @@ class OptionWindow(QWidget):
         layout.addWidget(self.fileLabel)
         layout.addWidget(buttonFile)
         layout.addStretch()
-        layout.addLayout(bottom)
+        layout.addWidget(buttonSave)
         self.setLayout(layout)
 
-    def filePick(self): # prompts user for a file using QFileDialog class
+    def filePick(self, main): # prompts user for a file using QFileDialog class
         prompt = QFileDialog(self) # init var with class
         prompt.setFileMode(QFileDialog.FileMode.ExistingFile) # open existing file
         prompt.setViewMode(QFileDialog.ViewMode.Detail) # shows greater detail in explorer
         self.filepath = prompt.getOpenFileName(self, "Select a file.", None, "Log Files (*.log);;Text Files (*.txt);;All Files (*)",)[0]
         self.fileLabel.setText("Log file: " + self.filepath)
 
+        main.filepath = self.filepath
+        main.reinit()
+
+    def maxChange(self, main):
+        main.maxLine = self.maxlineBox.value()
+        main.reinit()
+
+    def timerChange(self, main):
+        main.refresh = self.refreshBox.value()
+        main.timer.setInterval(main.refresh * 1000)
+        main.timerStop() # prevent timer from running constantly at 0
+
     def saveChanges(self): # saves the changes to the ini file
         with open("options.ini", "w") as ini: # writes ini. structure: file to open / maxlines / refreshseconds
             ini.write(self.filepath + "\n" + str(self.maxlineBox.value()) + "\n" + str(self.refreshBox.value()))
 
-    def applyChanges(self, main): # applies the changes to the main window
-        reload = False
-
-        if(main.maxLine != self.maxlineBox.value()):
-            main.maxLine = self.maxlineBox.value()
-            reload = True
-    
-        if(main.filepath != self.filepath):
-            main.filepath = self.filepath
-            reload = True
-
-        if(reload):
-            main.reinit()
-
-        if(main.refresh != self.refreshBox.value()):
-            main.refresh = self.refreshBox.value()
-            main.timer.setInterval(main.refresh * 1000)
-            main.timerStop() # prevent timer from running constantly at 0
 
 class LogWindow(QMainWindow): # The window class
     def __init__(self): # initializes class values
@@ -114,7 +106,7 @@ class LogWindow(QMainWindow): # The window class
         self.maxLine = int(options[1])
         self.refresh = int(options[2])
 
-        self.version = "v1.0.0"
+        self.version = "v1.1.0"
         self.setWindowTitle("pyLogViewer " + self.version + " - " + self.filepath)
         self.searchlist = -1 # contains items which match current search
         self.lastsearch = -1 # the last search, as a string. used for comparison to current search
